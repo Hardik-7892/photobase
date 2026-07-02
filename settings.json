@@ -1,0 +1,60 @@
+{
+  "site": {
+    "title": "Photobase",
+    "description": "Photographer Portfolio"
+  },
+  "photographer": {
+    "name": "Jane Doe",
+    "tagline": "Capturing moments that last forever",
+    "bio": "I'm a professional photographer based in San Francisco. With over a decade of experience, I specialize in wedding, portrait, and event photography. My approach is candid, creative, and always focused on telling your unique story through my lens."
+  },
+  "hero": {
+    "background": "https://picsum.photos/id/1043/1600/900"
+  },
+  "social": {
+    "instagram": "https://instagram.com/",
+    "twitter": "https://twitter.com/",
+    "facebook": "https://facebook.com/"
+  },
+  "contact": {
+    "email": "hello@janedoe.com"
+  },
+  "services": [
+    {
+      "title": "Wedding Photography",
+      "description": "Capturing your special day from beginning to end. Every laugh, tear, and dance move documented beautifully."
+    },
+    {
+      "title": "Portrait Sessions",
+      "description": "Professional portraits for individuals, families, and couples. Studio or location — your choice."
+    },
+    {
+      "title": "Event Photography",
+      "description": "Corporate events, parties, and special occasions. Discrete, professional coverage for any event size."
+    },
+    {
+      "title": "Landscape & Travel",
+      "description": "Stunning landscapes and travel photography for brands, publications, and personal projects."
+    }
+  ],
+  "testimonials": [
+    {
+      "name": "Sarah & Mike",
+      "text": "Jane captured our wedding perfectly. Every photo tells a story. We couldn't be happier with the results.",
+      "image": "https://picsum.photos/id/64/80/80"
+    },
+    {
+      "name": "David Chen",
+      "text": "Professional, creative, and incredibly easy to work with. The portraits exceeded my expectations.",
+      "image": "https://picsum.photos/id/91/80/80"
+    },
+    {
+      "name": "Emily Rodriguez",
+      "text": "The event photos were stunning. Jane has an incredible eye for detail and captured moments we didn't even notice.",
+      "image": "https://picsum.photos/id/177/80/80"
+    }
+  ],
+  "instagram": {
+    "username": "janedoephoto"
+  }
+}

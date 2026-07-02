@@ -3,80 +3,207 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Photobase — Portfolio</title>
+  <title x-text="(settings.site?.title || 'Photobase') + ' — ' + (settings.site?.description || 'Portfolio')"></title>
   <link rel="stylesheet" href="style.css" />
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 </head>
-<body>
-  <header>
-    <h1>Photobase</h1>
-    <nav>
-      <a href="manage/">Admin</a>
+<body x-data="portfolio()" x-init="init()" @keydown.window="handleKeydown($event)" x-cloak>
+
+  <!-- Navigation -->
+  <header :class="{ scrolled: scrolled }">
+    <a href="#" class="logo" @click.prevent="scrollTo('home')" x-text="settings.photographer?.name || 'Photobase'"></a>
+    <button class="hamburger" :class="{ open: menuOpen }" @click="menuOpen = !menuOpen" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+    <nav :class="{ open: menuOpen }">
+      <a href="#home" @click.prevent="scrollTo('home')" :class="{ active: activeNav === 'home' }">Home</a>
+      <a href="#gallery" @click.prevent="scrollTo('gallery')" :class="{ active: activeNav === 'gallery' }">Gallery</a>
+      <a href="#services" @click.prevent="scrollTo('services')" :class="{ active: activeNav === 'services' }">Services</a>
+      <a href="#testimonials" @click.prevent="scrollTo('testimonials')" :class="{ active: activeNav === 'testimonials' }">Testimonials</a>
+      <a href="#about" @click.prevent="scrollTo('about')" :class="{ active: activeNav === 'about' }">About</a>
+      <a href="#contact" @click.prevent="scrollTo('contact')" :class="{ active: activeNav === 'contact' }">Contact</a>
     </nav>
   </header>
 
-  <main x-data="gallery()" x-init="init()" @keydown.window="handleKeydown($event)">
-    <div class="filters">
-      <template x-for="cat in categories" :key="cat">
-        <button
-          class="filter-btn"
-          :class="{ active: filter === cat }"
-          x-text="cat"
-          @click="filter = cat; currentIndex = 0"
-        ></button>
-      </template>
-    </div>
+  <!-- Mobile menu backdrop -->
+  <div class="menu-backdrop" x-show="menuOpen" @click="menuOpen = false" x-cloak></div>
 
-    <div class="photo-grid" x-show="filteredPhotos.length > 0">
-      <template x-for="(photo, index) in filteredPhotos" :key="photo.id || index">
-        <div class="photo-card" @click="openLightbox(photo)">
-          <img :src="photo.image" :alt="photo.title" loading="lazy" />
-          <div class="info">
-            <h3 x-text="photo.title"></h3>
-            <span x-text="photo.category || 'Uncategorized'"></span>
+  <!-- Hero -->
+  <section id="home">
+    <div class="hero-bg" :style="'background-image: url(' + (settings.hero?.background || '') + ')'"></div>
+    <div class="hero-overlay"></div>
+    <div class="hero-content">
+      <h1 x-text="settings.photographer?.name || 'Photographer'"></h1>
+      <p x-text="settings.photographer?.tagline || ''"></p>
+      <a href="#gallery" class="btn" @click.prevent="scrollTo('gallery')">View Gallery</a>
+    </div>
+  </section>
+
+  <!-- Gallery -->
+  <section id="gallery">
+    <div class="container">
+      <h2 class="section-title">Gallery</h2>
+      <p class="section-subtitle">A selection of my favorite work</p>
+
+      <div class="filters" x-show="photos.length > 0">
+        <template x-for="cat in categories" :key="cat">
+          <button class="filter-btn" :class="{ active: filter === cat }" x-text="cat" @click="filter = cat; currentIndex = 0"></button>
+        </template>
+      </div>
+
+      <div class="photo-grid" x-show="photos.length > 0 && filteredPhotos.length > 0">
+        <template x-for="(photo, index) in filteredPhotos" :key="photo.id || index">
+          <div class="photo-card" @click="openLightbox(photo)">
+            <img :src="photo.image" :alt="photo.title" loading="lazy" />
           </div>
-        </div>
-      </template>
-    </div>
+        </template>
+      </div>
 
-    <div class="empty-state" x-show="photos.length === 0">
-      <h2>No photos yet</h2>
-      <p>Visit the <a href="manage/">admin panel</a> to add your first photo.</p>
-    </div>
+      <div class="empty-state" x-show="photos.length === 0">
+        <h2>No photos yet</h2>
+        <p>Visit the <a href="manage/">admin panel</a> to add your first photo.</p>
+      </div>
 
-    <div
-      class="lightbox-overlay"
-      x-show="lightboxOpen"
-      x-cloak
-      @click.self="closeLightbox()"
-    >
-      <div class="lightbox-content" x-show="currentPhoto">
-        <button class="lightbox-close" @click="closeLightbox()">&times;</button>
-        <button class="lightbox-nav lightbox-prev" @click="prevPhoto()">&lsaquo;</button>
-        <img :src="currentPhoto?.image" :alt="currentPhoto?.title" />
-        <button class="lightbox-nav lightbox-next" @click="nextPhoto()">&rsaquo;</button>
-        <div class="lightbox-info">
-          <h3 x-text="currentPhoto?.title"></h3>
-          <p x-text="currentPhoto?.description"></p>
+      <div class="empty-state" x-show="photos.length > 0 && filteredPhotos.length === 0" style="padding: 32px 20px">
+        <p>No photos in this category.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Services -->
+  <section id="services" x-show="settings.services?.length">
+    <div class="container">
+      <h2 class="section-title">Services</h2>
+      <p class="section-subtitle">What I can do for you</p>
+      <div class="services-grid">
+        <template x-for="(service, i) in settings.services" :key="service.title">
+          <div class="service-card">
+            <div class="icon" x-text="['W','P','E','L','B','O'][i] || '•'"></div>
+            <h3 x-text="service.title"></h3>
+            <p x-text="service.description"></p>
+          </div>
+        </template>
+      </div>
+    </div>
+  </section>
+
+  <!-- Testimonials -->
+  <section id="testimonials" x-show="settings.testimonials?.length">
+    <div class="container">
+      <h2 class="section-title">Testimonials</h2>
+      <p class="section-subtitle">What my clients say</p>
+      <div class="testimonials-grid">
+        <template x-for="t in settings.testimonials" :key="t.name">
+          <div class="testimonial-card">
+            <img :src="t.image" :alt="t.name" loading="lazy" />
+            <p class="text" x-text="t.text"></p>
+            <h4 x-text="t.name"></h4>
+          </div>
+        </template>
+      </div>
+    </div>
+  </section>
+
+  <!-- About -->
+  <section id="about">
+    <div class="container">
+      <h2 class="section-title">About</h2>
+      <p class="section-subtitle">Get to know me</p>
+      <div class="about-grid">
+        <img src="https://picsum.photos/id/1005/400/500" :alt="settings.photographer?.name" loading="lazy" />
+        <div>
+          <p class="bio" x-text="settings.photographer?.bio || ''"></p>
+          <div class="social-links">
+            <a :href="settings.social?.instagram || '#'" target="_blank" rel="noopener">Instagram</a>
+            <a :href="settings.social?.twitter || '#'" target="_blank" rel="noopener">Twitter</a>
+            <a :href="settings.social?.facebook || '#'" target="_blank" rel="noopener">Facebook</a>
+          </div>
         </div>
       </div>
     </div>
-  </main>
+  </section>
+
+  <!-- Contact -->
+  <section id="contact">
+    <div class="container">
+      <h2 class="section-title" style="color:white">Get in Touch</h2>
+      <p class="section-subtitle">Have a project in mind? Let's talk.</p>
+      <a :href="'mailto:' + (settings.contact?.email || '')" class="contact-email" x-text="settings.contact?.email || ''"></a>
+      <div class="contact-social">
+        <a :href="settings.social?.instagram || '#'" target="_blank" rel="noopener" title="Instagram">IG</a>
+        <a :href="settings.social?.twitter || '#'" target="_blank" rel="noopener" title="Twitter">X</a>
+        <a :href="settings.social?.facebook || '#'" target="_blank" rel="noopener" title="Facebook">FB</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Instagram -->
+  <section id="instagram" x-show="settings.instagram?.username">
+    <div class="container">
+      <div class="instagram-header">
+        <h2 class="section-title">Follow on Instagram</h2>
+        <p class="handle">@<span x-text="settings.instagram?.username || ''"></span></p>
+      </div>
+      <div class="insta-grid">
+        <template x-for="(photo, i) in photos.slice(0, 6)" :key="'insta-' + i">
+          <a :href="'https://instagram.com/' + (settings.instagram?.username || '')" target="_blank" rel="noopener">
+            <img :src="photo.image" :alt="photo.title" loading="lazy" />
+          </a>
+        </template>
+      </div>
+      <div class="insta-cta">
+        <a :href="'https://instagram.com/' + (settings.instagram?.username || '')" target="_blank" rel="noopener" class="btn btn-primary">
+          Follow @<span x-text="settings.instagram?.username || ''"></span>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <p>&copy; <span x-text="new Date().getFullYear()"></span> <span x-text="settings.photographer?.name || 'Photobase'"></span>. All rights reserved.</p>
+  </footer>
+
+  <!-- Lightbox -->
+  <div class="lightbox-overlay" x-show="lightboxOpen" x-cloak @click.self="closeLightbox()">
+    <div class="lightbox-content" x-show="currentPhoto">
+      <button class="lightbox-close" @click="closeLightbox()">&times;</button>
+      <button class="lightbox-nav lightbox-prev" @click="prevPhoto()">&lsaquo;</button>
+      <img :src="currentPhoto?.image" :alt="currentPhoto?.title" />
+      <button class="lightbox-nav lightbox-next" @click="nextPhoto()">&rsaquo;</button>
+      <div class="lightbox-info">
+        <h3 x-text="currentPhoto?.title || ''"></h3>
+        <p x-text="currentPhoto?.description || ''"></p>
+      </div>
+    </div>
+  </div>
 
   <script>
-    function gallery() {
+    function portfolio() {
       return {
+        settings: {
+          site: {},
+          photographer: {},
+          hero: {},
+          social: {},
+          contact: {},
+          services: [],
+          testimonials: [],
+          instagram: {}
+        },
         photos: [],
         categories: ['All'],
         filter: 'All',
         lightboxOpen: false,
         currentIndex: 0,
+        activeNav: 'home',
+        menuOpen: false,
+        scrolled: false,
+        observer: null,
 
         get filteredPhotos() {
           if (this.filter === 'All') return this.photos;
-          return this.photos.filter(function(p) {
-            return p.category === this.filter;
-          }.bind(this));
+          return this.photos.filter(function(p) { return p.category === this.filter; }.bind(this));
         },
 
         get currentPhoto() {
@@ -85,20 +212,53 @@
 
         async init() {
           try {
-            var res = await fetch('gallery.json?_=' + Date.now());
-            var data = await res.json();
-            var items = data.photos || [];
-            items.sort(function(a, b) { return (a.order || 0) - (b.order || 0); });
-            this.photos = items;
+            var [settingsRes, galleryRes] = await Promise.all([
+              fetch('settings.json?_=' + Date.now()),
+              fetch('gallery.json?_=' + Date.now())
+            ]);
+            this.settings = await settingsRes.json();
+            var gallery = await galleryRes.json();
+            this.photos = (gallery.photos || []).sort(function(a, b) { return (a.order || 0) - (b.order || 0); });
             var catSet = {};
-            items.forEach(function(p) { if (p.category) catSet[p.category] = true; });
+            this.photos.forEach(function(p) { if (p.category) catSet[p.category] = true; });
             this.categories = ['All'].concat(Object.keys(catSet));
           } catch (e) {
-            console.error('Failed to load gallery:', e);
+            console.error('Failed to load data:', e);
           }
+
+          this.$nextTick(function() {
+            this.initNav();
+            this.trackScroll();
+          }.bind(this));
         },
 
-        openLightbox: function(photo) {
+        initNav() {
+          this.observer = new IntersectionObserver(function(entries) {
+            entries.forEach(function(entry) {
+              if (entry.isIntersecting) {
+                this.activeNav = entry.target.id;
+              }
+            }.bind(this));
+          }.bind(this), { threshold: 0.3, rootMargin: '-80px 0px 0px 0px' });
+
+          document.querySelectorAll('section[id]').forEach(function(s) {
+            this.observer.observe(s);
+          }.bind(this));
+        },
+
+        trackScroll() {
+          window.addEventListener('scroll', function() {
+            this.scrolled = window.scrollY > 60;
+          }.bind(this), { passive: true });
+        },
+
+        scrollTo(id) {
+          this.menuOpen = false;
+          var el = document.getElementById(id);
+          if (el) el.scrollIntoView({ behavior: 'smooth' });
+        },
+
+        openLightbox(photo) {
           var idx = this.filteredPhotos.indexOf(photo);
           if (idx === -1) idx = 0;
           this.currentIndex = idx;
@@ -106,28 +266,28 @@
           document.body.style.overflow = 'hidden';
         },
 
-        closeLightbox: function() {
+        closeLightbox() {
           this.lightboxOpen = false;
           document.body.style.overflow = '';
         },
 
-        nextPhoto: function() {
+        nextPhoto() {
           var len = this.filteredPhotos.length;
           if (len === 0) return;
           this.currentIndex = (this.currentIndex + 1) % len;
         },
 
-        prevPhoto: function() {
+        prevPhoto() {
           var len = this.filteredPhotos.length;
           if (len === 0) return;
           this.currentIndex = (this.currentIndex - 1 + len) % len;
         },
 
-        handleKeydown: function(e) {
+        handleKeydown(e) {
           if (!this.lightboxOpen) return;
-          if (e.key === 'Escape') { this.closeLightbox(); }
-          else if (e.key === 'ArrowRight') { this.nextPhoto(); }
-          else if (e.key === 'ArrowLeft') { this.prevPhoto(); }
+          if (e.key === 'Escape') this.closeLightbox();
+          else if (e.key === 'ArrowRight') this.nextPhoto();
+          else if (e.key === 'ArrowLeft') this.prevPhoto();
         }
       };
     }
