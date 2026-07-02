@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title x-text="(settings.site?.title || 'Photobase') + ' — ' + (settings.site?.description || 'Portfolio')"></title>
   <link rel="stylesheet" href="style.css" />
+  <script>!function(){var t=localStorage.getItem('photobase-theme')||'dark';document.documentElement.dataset.theme=t;window.toggleTheme=function(){var e=document.documentElement.dataset.theme;e=e==='dark'?'light':'dark';document.documentElement.dataset.theme=e;localStorage.setItem('photobase-theme',e)}}()</script>
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.3/dist/cdn.min.js" integrity="sha384-Rpe/8orFUm5Q1GplYBHxbuA8Az8O8C5sAoOsdbRWkqPjKFaxPgGZipj4zeHL7lxX" crossorigin="anonymous"></script>
 </head>
 <body x-data="portfolio()" x-init="init()" @keydown.window="handleKeydown($event)" x-cloak>
@@ -23,6 +24,7 @@
       <a href="#about" @click.prevent="scrollTo('about')" :class="{ active: activeNav === 'about' }">About</a>
       <a href="#contact" @click.prevent="scrollTo('contact')" :class="{ active: activeNav === 'contact' }">Contact</a>
       <a href="manage/" class="nav-admin">Admin</a>
+      <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme">&#9790;</button>
     </nav>
   </header>
 

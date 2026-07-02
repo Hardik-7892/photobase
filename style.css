@@ -5,18 +5,70 @@
 }
 
 :root {
-  --bg: #f8f8f8;
-  --surface: #ffffff;
-  --text: #1a1a1a;
-  --text-secondary: #777;
-  --text-light: #aaa;
-  --border: #e8e8e8;
-  --shadow: 0 2px 12px rgba(0,0,0,0.06);
+  --bg: #0a0a0a;
+  --surface: #111;
+  --text: #fff;
+  --text-secondary: rgba(255,255,255,0.65);
+  --text-muted: rgba(255,255,255,0.45);
+  --border: rgba(255,255,255,0.1);
+  --shadow: 0 2px 12px rgba(0,0,0,0.3);
+  --section-alt-bg: #111;
+  --hero-overlay: rgba(0,0,0,0.45);
+  --header-scrolled-bg: rgba(0,0,0,0.85);
+  --hamburger: #fff;
+  --filter-border: rgba(255,255,255,0.2);
+  --filter-text: rgba(255,255,255,0.6);
+  --filter-active-bg: #fff;
+  --filter-active-text: #1a1a1a;
+  --contact-social-border: rgba(255,255,255,0.3);
+  --contact-social-text: rgba(255,255,255,0.7);
+  --empty-text: rgba(255,255,255,0.5);
+  --empty-heading: #fff;
+  --insta-hover-bg: rgba(0,0,0,0.15);
+  --dropdown-bg: #111;
+  --dropdown-text: #fff;
+  --lightbox-bg: rgba(0,0,0,0.92);
+  --lbox-nav-bg: rgba(255,255,255,0.06);
+  --lbox-nav-hover: rgba(255,255,255,0.15);
+  --lbox-text: rgba(255,255,255,0.7);
+  --lbox-text-secondary: rgba(255,255,255,0.5);
+  --lbox-close: #fff;
   --radius: 8px;
   --header-height: 60px;
   --section-padding: 80px 0;
   --content-width: 1200px;
   --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+}
+
+[data-theme="light"] {
+  --bg: #f5f5f5;
+  --surface: #fff;
+  --text: #1a1a1a;
+  --text-secondary: #777;
+  --text-muted: #aaa;
+  --border: #e0e0e0;
+  --shadow: 0 2px 12px rgba(0,0,0,0.06);
+  --section-alt-bg: #eee;
+  --hero-overlay: rgba(0,0,0,0.25);
+  --header-scrolled-bg: rgba(255,255,255,0.97);
+  --hamburger: #1a1a1a;
+  --filter-border: rgba(0,0,0,0.15);
+  --filter-text: rgba(0,0,0,0.5);
+  --filter-active-bg: #1a1a1a;
+  --filter-active-text: #fff;
+  --contact-social-border: rgba(0,0,0,0.2);
+  --contact-social-text: rgba(0,0,0,0.5);
+  --empty-text: rgba(0,0,0,0.4);
+  --empty-heading: #1a1a1a;
+  --insta-hover-bg: rgba(0,0,0,0.05);
+  --dropdown-bg: #fff;
+  --dropdown-text: #1a1a1a;
+  --lightbox-bg: rgba(0,0,0,0.85);
+  --lbox-nav-bg: rgba(255,255,255,0.1);
+  --lbox-nav-hover: rgba(255,255,255,0.2);
+  --lbox-text: rgba(255,255,255,0.8);
+  --lbox-text-secondary: rgba(255,255,255,0.6);
+  --lbox-close: #fff;
 }
 
 html {
@@ -80,8 +132,8 @@ section {
 }
 
 .btn-primary {
-  background: var(--text);
-  color: white;
+  background: #1a1a1a;
+  color: #fff;
 }
 
 .btn-primary:hover {
@@ -112,7 +164,7 @@ header {
 }
 
 header.scrolled {
-  background: rgba(255,255,255,0.97);
+  background: var(--header-scrolled-bg);
   box-shadow: 0 1px 8px rgba(0,0,0,0.08);
   backdrop-filter: blur(8px);
 }
@@ -126,8 +178,16 @@ header.scrolled nav a {
   font-size: 1.1rem;
   font-weight: 600;
   letter-spacing: 0.5px;
-  color: white;
+  color: #fff;
   transition: color 0.3s;
+}
+
+[data-theme="light"] .logo {
+  color: var(--text);
+}
+
+[data-theme="light"] header:not(.scrolled) .logo {
+  color: #fff;
 }
 
 header nav {
@@ -145,7 +205,15 @@ header nav a {
 }
 
 header nav a:hover {
-  color: white;
+  color: #fff;
+}
+
+[data-theme="light"] header:not(.scrolled) nav a {
+  color: rgba(255,255,255,0.8);
+}
+
+[data-theme="light"] header:not(.scrolled) nav a:hover {
+  color: #fff;
 }
 
 header.scrolled nav a {
@@ -158,7 +226,7 @@ header.scrolled nav a.active {
 }
 
 header nav a.active {
-  color: white;
+  color: #fff;
 }
 
 header nav a.nav-admin {
@@ -169,6 +237,38 @@ header nav a.nav-admin {
 
 header nav a.nav-admin:hover {
   opacity: 1;
+}
+
+.theme-toggle {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.05rem;
+  line-height: 1;
+  padding: 4px 8px;
+  color: rgba(255,255,255,0.7);
+  transition: color 0.2s;
+  font-family: inherit;
+}
+
+.theme-toggle:hover {
+  color: #fff;
+}
+
+[data-theme="light"] header:not(.scrolled) .theme-toggle {
+  color: rgba(255,255,255,0.7);
+}
+
+[data-theme="light"] header:not(.scrolled) .theme-toggle:hover {
+  color: #fff;
+}
+
+header.scrolled .theme-toggle {
+  color: var(--text-secondary);
+}
+
+header.scrolled .theme-toggle:hover {
+  color: var(--text);
 }
 
 .menu-backdrop {
@@ -198,7 +298,7 @@ header nav a.nav-admin:hover {
   display: block;
   width: 22px;
   height: 2px;
-  background: white;
+  background: var(--hamburger);
   margin: 5px 0;
   transition: all 0.3s;
   border-radius: 1px;
@@ -243,7 +343,7 @@ header.scrolled .hamburger span {
 .hero-overlay {
   position: absolute;
   inset: 0;
-  background: rgba(0,0,0,0.45);
+  background: var(--hero-overlay);
 }
 
 .hero-content {
@@ -284,15 +384,15 @@ header.scrolled .hamburger span {
 /* ========== Gallery ========== */
 
 #gallery {
-  background: var(--text);
+  background: var(--section-alt-bg);
 }
 
 #gallery .section-title {
-  color: white;
+  color: var(--text);
 }
 
 #gallery .section-subtitle {
-  color: rgba(255,255,255,0.5);
+  color: var(--text-secondary);
 }
 
 .filters {
@@ -316,10 +416,10 @@ header.scrolled .hamburger span {
 .filter-dropdown {
   display: none;
   padding: 8px 16px;
-  border: 1px solid rgba(255,255,255,0.2);
+  border: 1px solid var(--filter-border);
   border-radius: 8px;
   background: transparent;
-  color: rgba(255,255,255,0.8);
+  color: var(--text);
   font-size: 0.85rem;
   font-family: inherit;
   cursor: pointer;
@@ -327,7 +427,7 @@ header.scrolled .hamburger span {
   max-width: 300px;
   width: 100%;
 }
-.filter-dropdown option { background: #111; color: white; }
+.filter-dropdown option { background: var(--dropdown-bg); color: var(--dropdown-text); }
 
 @media (max-width: 600px) {
   .filter-dropdown { display: block; }
@@ -337,10 +437,10 @@ header.scrolled .hamburger span {
 
 .filter-btn {
   padding: 6px 18px;
-  border: 1px solid rgba(255,255,255,0.2);
+  border: 1px solid var(--filter-border);
   border-radius: 20px;
   background: transparent;
-  color: rgba(255,255,255,0.6);
+  color: var(--filter-text);
   cursor: pointer;
   font-size: 0.82rem;
   transition: all 0.2s;
@@ -348,14 +448,14 @@ header.scrolled .hamburger span {
 }
 
 .filter-btn:hover {
-  border-color: white;
-  color: white;
+  border-color: var(--text);
+  color: var(--text);
 }
 
 .filter-btn.active {
-  background: white;
-  color: var(--text);
-  border-color: white;
+  background: var(--filter-active-bg);
+  color: var(--filter-active-text);
+  border-color: var(--filter-active-bg);
 }
 
 .photo-grid {
@@ -511,26 +611,26 @@ header.scrolled .hamburger span {
 
 #contact {
   text-align: center;
-  background: var(--text);
-  color: white;
+  background: var(--section-alt-bg);
+  color: var(--text);
 }
 
 #contact .section-subtitle {
-  color: rgba(255,255,255,0.6);
+  color: var(--text-secondary);
 }
 
 .contact-email {
   display: inline-block;
   font-size: 1.3rem;
   font-weight: 300;
-  color: rgba(255,255,255,0.85);
+  color: var(--text-secondary);
   margin-bottom: 32px;
   letter-spacing: 0.5px;
   transition: color 0.2s;
 }
 
 .contact-email:hover {
-  color: white;
+  color: var(--text);
 }
 
 .contact-social {
@@ -546,16 +646,16 @@ header.scrolled .hamburger span {
   width: 44px;
   height: 44px;
   border-radius: 50%;
-  border: 1px solid rgba(255,255,255,0.3);
-  color: rgba(255,255,255,0.7);
+  border: 1px solid var(--contact-social-border);
+  color: var(--contact-social-text);
   font-size: 0.8rem;
   text-transform: uppercase;
   transition: all 0.2s;
 }
 
 .contact-social a:hover {
-  border-color: white;
-  color: white;
+  border-color: var(--text);
+  color: var(--text);
 }
 
 /* ========== Instagram ========== */
@@ -597,7 +697,7 @@ header.scrolled .hamburger span {
 }
 
 .insta-grid a:hover::after {
-  background: rgba(0,0,0,0.15);
+  background: var(--insta-hover-bg);
 }
 
 .insta-grid img {
@@ -617,7 +717,7 @@ footer {
   text-align: center;
   padding: 24px;
   font-size: 0.82rem;
-  color: var(--text-light);
+  color: var(--text-muted);
   border-top: 1px solid var(--border);
 }
 
@@ -626,7 +726,7 @@ footer {
 .lightbox-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.92);
+  background: var(--lightbox-bg);
   z-index: 2000;
   display: flex;
   align-items: center;
@@ -652,7 +752,7 @@ footer {
   right: 0;
   background: none;
   border: none;
-  color: white;
+  color: var(--lbox-close);
   font-size: 2rem;
   cursor: pointer;
   padding: 4px 8px;
@@ -667,9 +767,9 @@ footer {
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
-  background: rgba(255,255,255,0.06);
+  background: var(--lbox-nav-bg);
   border: none;
-  color: white;
+  color: var(--lbox-close);
   font-size: 1.5rem;
   padding: 16px 10px;
   cursor: pointer;
@@ -680,7 +780,7 @@ footer {
 }
 
 .lightbox-nav:hover {
-  background: rgba(255,255,255,0.15);
+  background: var(--lbox-nav-hover);
   opacity: 1;
 }
 
@@ -692,7 +792,7 @@ footer {
   bottom: -48px;
   left: 0;
   right: 0;
-  color: rgba(255,255,255,0.7);
+  color: var(--lbox-text);
   text-align: center;
 }
 
@@ -703,7 +803,7 @@ footer {
 
 .lightbox-info p {
   font-size: 0.85rem;
-  color: rgba(255,255,255,0.5);
+  color: var(--lbox-text-secondary);
 }
 
 /* ========== Empty State ========== */
@@ -711,17 +811,17 @@ footer {
 .empty-state {
   text-align: center;
   padding: 60px 20px;
-  color: rgba(255,255,255,0.5);
+  color: var(--empty-text);
 }
 
 .empty-state h2 {
   font-size: 1.3rem;
   margin-bottom: 8px;
-  color: white;
+  color: var(--empty-heading);
 }
 
 .empty-state a {
-  color: white;
+  color: var(--text);
   text-decoration: underline;
 }
 
