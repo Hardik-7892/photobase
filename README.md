@@ -1,50 +1,58 @@
 # Photobase
 
-A full photographer portfolio website that works on GitHub Pages — with an admin panel to manage photos.
+A full photographer portfolio website with an admin panel to manage photos from any device.
 
-**Portfolio sections:** Hero • Gallery • Services • Testimonials • About • Contact • Instagram
-
----
-
-## Quick Start
-
-1. **Fork** this repo or push it to your GitHub account
-2. Go to **Settings > Pages** and enable GitHub Pages from the `main` branch root
-3. Your site is live at `https://your-username.github.io/photobase/`
-4. Open `https://your-username.github.io/photobase/manage/` to start adding photos
+**Portfolio sections:** Hero &bull; Gallery &bull; Services &bull; Testimonials &bull; About &bull; Contact &bull; Instagram
 
 ---
 
-## Setup: Generate a GitHub Token
+## Quick Start (1-Click Deploy)
 
-1. Go to **GitHub Settings > Developer settings > Personal access tokens > Tokens (classic)**
-2. Click **Generate new token (classic)**
-3. Give it a name like `Photobase`
-4. Under **Expiration**, choose **No expiration**
-5. Under **Scopes**, check **`repo`** (full control of private repositories)
-6. Click **Generate token**
-7. **Copy the token** — it starts with `github_pat_...` or `ghp_...`
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fanomalyco%2Fphotobase&env=GITHUB_OWNER,GITHUB_REPO,GITHUB_BRANCH,GITHUB_PAT&project-name=photobase&repository-name=photobase)
 
-## Connect the Admin
+Click the button above to:
 
-Open `https://your-username.github.io/photobase/manage/` and enter:
+1. **Fork** this repo to your GitHub account
+2. **Deploy** to Vercel (free)
+3. **Set** environment variables when prompted
 
-| Field | Value |
+After deployment, your site is live at `https://photobase-xxx.vercel.app` and the admin panel is at `https://photobase-xxx.vercel.app/manage/`.
+
+---
+
+## Setup: Generate a Fine-Grained GitHub Token
+
+The token is stored securely in Vercel environment variables &mdash; it **never touches your browser**.
+
+1. Go to **GitHub Settings > Developer settings > Personal access tokens > Fine-grained tokens**
+2. Click **Generate new token**
+3. Set **Repository access** &rarr; **Only select repositories** &rarr; choose your photobase repo
+4. Under **Permissions &rarr; Contents** &rarr; set **Access: Read and write**
+5. Click **Generate token**
+6. **Copy the token** &mdash; it starts with `github_pat_...`
+
+> Or use a classic token with `repo` scope if you prefer, but fine-grained is recommended for security.
+
+## Environment Variables
+
+When Vercel prompts you, set these:
+
+| Variable | Value |
 |---|---|
-| Repository Owner | your GitHub username |
-| Repository Name | `photobase` |
-| Branch | `main` |
-| Personal Access Token | the token you generated |
+| `GITHUB_OWNER` | your GitHub username |
+| `GITHUB_REPO` | `photobase` (or your repo name) |
+| `GITHUB_BRANCH` | `main` (or your branch name) |
+| `GITHUB_PAT` | the fine-grained token |
 
-Click **Connect**.
+You can also change them later in **Vercel Dashboard &rarr; Project &rarr; Settings &rarr; Environment Variables**.
 
 ## Admin Features
 
-- **Add photos** — drag-and-drop or click to select an image, fill in title/category
-- **Reorder** — drag cards by the handle (⠿) to rearrange order
-- **Edit** — click Edit on any card to change title, category, or description
-- **Delete** — click Delete to remove a photo
-- **Save** — click **Save Changes** to commit everything to your repo
+- **Add photos** &mdash; drag-and-drop or click to select an image, fill in title/category
+- **Reorder** &mdash; drag cards by the handle to rearrange order
+- **Edit** &mdash; click Edit on any card to change title, category, or description
+- **Delete** &mdash; click Delete to remove a photo
+- **Save** &mdash; click **Save Changes** to commit everything to your GitHub repo
 
 ---
 
@@ -65,31 +73,35 @@ Edit **`settings.json`** to personalize your site:
 | `testimonials` | Client testimonials with name, text, avatar |
 | `instagram.username` | Instagram handle (links to your profile) |
 
-> **Sample images** are provided in `assets/images/samples/` and referenced in `settings.json`, `gallery.json`, and `index.html`. These are placeholders — replace them with your own photos.
+> **Sample images** are provided in `assets/images/samples/` and referenced in `settings.json`, `gallery.json`, and `index.html`. These are placeholders &mdash; replace them with your own photos.
 
 **To add your own images:**
 1. Place your image files directly in `assets/images/` (for example, `assets/images/hero.jpg`)
-2. Update the path in `settings.json`, `gallery.json`, or `index.html` to point to your file (e.g., `"background": "assets/images/hero.jpg"`)
+2. Update the path in `settings.json`, `gallery.json`, or `index.html` to point to your file
 3. The admin panel will also upload new photos to `assets/images/` automatically
-
-Do not edit or rely on files in `assets/images/samples/` — that folder is for demo purposes only and may be overwritten.
 
 ## File Structure
 
 ```
 photobase/
-├── index.html        Portfolio page (all sections, Alpine.js)
-├── style.css         Global styles
-├── settings.json     Customizable portfolio content
-├── gallery.json      Photo data (edit via /manage/)
-├── manage/
-│   ├── index.html    Admin page
-│   └── app.js        Admin logic (GitHub API)
-└── assets/
-    └── images/
-        ├── samples/     Sample/demo images (replace with yours)
-        ├── your-photo.jpg  ← your own images go here
-        └── ...
+??? index.html        Portfolio page (all sections, Alpine.js)
+??? style.css         Global styles
+??? settings.json     Customizable portfolio content
+??? gallery.json      Photo data (edit via /manage/)
+??? manage/
+?   ??? index.html    Admin page
+?   ??? app.js        Admin logic
+??? api/
+?   ??? gallery.js    API route: load/save gallery.json
+?   ??? upload.js     API route: upload images
+?   ??? settings.js   API route: load settings.json
+??? lib/
+?   ??? github.js     Shared GitHub API client
+?   ??? validation.js Server-side file validation
+??? assets/
+    ??? images/
+        ??? samples/  Sample/demo images (replace with yours)
+        ??? ...
 ```
 
 ## Customization

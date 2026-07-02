@@ -214,8 +214,8 @@
         async init() {
           try {
             var [settingsRes, galleryRes] = await Promise.all([
-              fetch('settings.json?_=' + Date.now()),
-              fetch('gallery.json?_=' + Date.now())
+              fetch('/api/settings'),
+              fetch('/api/gallery')
             ]);
             this.settings = await settingsRes.json();
             var gallery = await galleryRes.json();

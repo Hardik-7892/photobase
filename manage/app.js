@@ -1,5 +1,3 @@
-var API_BASE = 'https://api.github.com';
-var owner, repo, branch, token;
 var photos = [];
 var fileSha = null;
 var pendingImage = null;
@@ -8,7 +6,7 @@ var dirty = false;
 const MAX_TITLE_LEN = 100;
 const MAX_CATEGORY_LEN = 50;
 const MAX_DESCRIPTION_LEN = 500;
-const MAX_FILE_SIZE = 100 * 1024 * 1024;
+const MAX_FILE_SIZE = 3 * 1024 * 1024;
 const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'video/mp4', 'video/webm', 'video/quicktime'];
 const ALLOWED_EXTENSIONS = ['jpg', 'jpeg', 'png', 'webp', 'gif', 'mp4', 'webm', 'mov'];
 const MAGIC_BYTES = {
@@ -61,184 +59,32 @@ async function validateFile(file) {
   return true;
 }
 
-async function githubFetch(url, options, retries = 3) {
-  var res = await fetch(url, options);
-  var remaining = parseInt(res.headers.get('X-RateLimit-Remaining') || '1', 10);
-  var resetTime = parseInt(res.headers.get('X-RateLimit-Reset') || '0', 10);
-
-  if ((res.status === 403 || res.status === 429) && remaining === 0 && resetTime > 0) {
-    var waitMs = Math.max((resetTime * 1000) - Date.now(), 0) + 1000;
-    if (retries > 0) {
-      showStatus('Rate limited. Retrying in ' + Math.ceil(waitMs / 1000) + 's...', 'loading');
-      await new Promise(function(r) { return setTimeout(r, waitMs); });
-      return githubFetch(url, options, retries - 1);
-    }
-    throw new Error('Rate limit exceeded. Try again later.');
-  }
-
-  if (!res.ok) {
-    var errBody = await res.json().catch(function() { return {}; });
-    throw new Error(errBody.message || 'HTTP ' + res.status);
-  }
-  return res;
-}
-
-async function connect() {
-  owner = document.getElementById('owner').value.trim();
-  repo = document.getElementById('repo').value.trim();
-  branch = document.getElementById('branch').value.trim();
-  token = document.getElementById('token').value.trim();
-
-  if (!owner || !repo || !token) {
-    return showStatus('Fill in all required fields.', 'error');
-  }
-
-  if (!/^[a-zA-Z0-9](?:[a-zA-Z0-9._-]*[a-zA-Z0-9])?$/.test(owner)) {
-    return showStatus('Invalid repository owner format.', 'error');
-  }
-  if (!/^[a-zA-Z0-9._-]+$/.test(repo)) {
-    return showStatus('Invalid repository name format.', 'error');
-  }
-  if (!/^[a-zA-Z0-9._\-\/]+$/.test(branch)) {
-    return showStatus('Invalid branch name format.', 'error');
-  }
-
-  showStatus('Verifying token...', 'loading');
-  try {
-    var res = await fetch('https://api.github.com/user', {
-      headers: { Authorization: 'token ' + token }
-    });
-    if (!res.ok) {
-      throw new Error('HTTP ' + res.status);
-    }
-    var scopes = res.headers.get('X-OAuth-Scopes') || '';
-    if (scopes.indexOf('repo') === -1) {
-      return showStatus('Token is missing "repo" scope. Generate a new token with repo scope.', 'error');
-    }
-  } catch (err) {
-    showStatus(sanitizeError(err), 'error');
-    return;
-  }
-
-  loadGallery();
-}
-
 async function loadGallery() {
-  showStatus('Connecting...', 'loading');
+  showStatus('Loading...', 'loading');
+  document.getElementById('status-text').textContent = 'Connecting...';
+  document.getElementById('error-container').style.display = 'none';
+
   try {
-    var result = await getFile('gallery.json');
-    fileSha = result.sha;
-    photos = result.content.photos || [];
-    showDashboard();
-    renderPhotos();
-    showStatus('Connected', 'success');
-    checkTokenRotation();
-  } catch (err) {
-    if (err.message.indexOf('404') !== -1 || err.message.indexOf('Not Found') !== -1) {
-      fileSha = null;
-      photos = [];
-      showDashboard();
-      renderPhotos();
-      showStatus('No gallery.json yet — add your first photo', '');
-    } else {
-      showStatus(sanitizeError(err), 'error');
+    var res = await fetch('/api/gallery');
+    if (!res.ok) {
+      var err = await res.json().catch(function() { return {}; });
+      throw new Error(err.error || 'HTTP ' + res.status);
     }
+    var data = await res.json();
+    fileSha = data.sha;
+    photos = data.photos || [];
+    document.getElementById('status-text').textContent = 'Connected';
+    showStatus('', '');
+    document.getElementById('toolbar').style.display = 'flex';
+    renderPhotos();
+  } catch (err) {
+    document.getElementById('status-text').textContent = 'Error';
+    document.getElementById('toolbar').style.display = 'none';
+    document.getElementById('error-container').style.display = 'block';
+    document.getElementById('photo-grid').innerHTML = '';
+    document.getElementById('loading-state').style.display = 'none';
+    showStatus('', '');
   }
-}
-
-function checkTokenRotation() {
-  var key = 'photobase_token_first_connected';
-  var firstConnected = localStorage.getItem(key);
-  var now = Date.now();
-  if (!firstConnected) {
-    localStorage.setItem(key, String(now));
-    return;
-  }
-  var daysSince = Math.floor((now - parseInt(firstConnected, 10)) / 86400000);
-  if (daysSince >= 30) {
-    showStatus('Connected. Tip: rotate your token if it has been a while for security.', '');
-  }
-}
-
-async function getFile(path) {
-  var url = API_BASE + '/repos/' + owner + '/' + repo + '/contents/' + encodeURI(path) + '?ref=' + branch;
-  var res = await githubFetch(url, { headers: { Authorization: 'token ' + token } });
-  var data = await res.json();
-  var content = JSON.parse(atob(data.content));
-  return { sha: data.sha, content: content };
-}
-
-async function putFile(path, content, sha, message) {
-  var url = API_BASE + '/repos/' + owner + '/' + repo + '/contents/' + encodeURI(path);
-  var body = {
-    message: message,
-    content: btoa(unescape(encodeURIComponent(JSON.stringify(content, null, 2)))),
-    branch: branch
-  };
-  if (sha) body.sha = sha;
-
-  var res = await githubFetch(url, {
-    method: 'PUT',
-    headers: {
-      Authorization: 'token ' + token,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify(body)
-  });
-  return res.json();
-}
-
-async function uploadImage(file) {
-  var safeName = sanitizeFilename(file.name);
-  var parts = safeName.split('.');
-  var ext = parts.length > 1 ? parts[parts.length - 1].toLowerCase() : 'bin';
-  var filename = Date.now() + '-' + Math.random().toString(36).substring(2, 8) + '.' + ext;
-  var path = 'assets/images/' + filename;
-  var base64 = await fileToBase64(file);
-
-  var url = API_BASE + '/repos/' + owner + '/' + repo + '/contents/' + encodeURI(path);
-  var res = await githubFetch(url, {
-    method: 'PUT',
-    headers: {
-      Authorization: 'token ' + token,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      message: 'Upload ' + filename,
-      content: base64,
-      branch: branch
-    })
-  });
-  return 'assets/images/' + filename;
-}
-
-function fileToBase64(file) {
-  return new Promise(function(resolve, reject) {
-    var reader = new FileReader();
-    reader.onload = function() {
-      resolve(reader.result.split(',')[1]);
-    };
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
-}
-
-function showDashboard() {
-  document.getElementById('connect-form').style.display = 'none';
-  document.getElementById('dashboard').style.display = 'block';
-  document.getElementById('repo-badge').textContent = owner + '/' + repo + ' (' + branch + ')';
-}
-
-function disconnect() {
-  owner = repo = branch = token = '';
-  photos = [];
-  fileSha = null;
-  pendingImage = null;
-  setDirty(false);
-  document.getElementById('connect-form').style.display = 'block';
-  document.getElementById('dashboard').style.display = 'none';
-  document.getElementById('save-status').textContent = '';
-  document.getElementById('save-status').className = 'save-status';
 }
 
 function renderPhotos() {
@@ -263,7 +109,7 @@ function renderPhotos() {
     var imgSrc = photo.image || '';
 
     card.innerHTML =
-      '<div class="drag-handle">⠿</div>' +
+      '<div class="drag-handle">&#x2630;</div>' +
       '<img src="' + imgSrc + '" alt="' + title + '" loading="lazy" onerror="this.parentElement.classList.add(\'img-error\');this.src=\'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 400 300%22%3E%3Crect fill=%22%23eee%22 width=%22400%22 height=%22300%22/%3E%3Ctext fill=%22%23999%22 x=%22200%22 y=%22150%22 text-anchor=%22middle%22 font-family=%22sans-serif%22 font-size=%2220%22%3ENo image%3C/text%3E%3C/svg%3E\'" />' +
       '<div class="card-body">' +
         '<h4>' + title + '</h4>' +
@@ -291,7 +137,7 @@ function setDirty(val) {
   dirty = val;
   var btn = document.getElementById('save-btn');
   if (dirty) {
-    btn.textContent = 'Save Changes ⬩';
+    btn.textContent = 'Save Changes \u2605';
     btn.style.outline = '2px solid #e67e22';
     btn.style.outlineOffset = '2px';
   } else {
@@ -410,7 +256,22 @@ async function savePhoto() {
     btn.disabled = true;
     btn.textContent = 'Uploading image...';
     try {
-      imagePath = await uploadImage(pendingImage);
+      var base64 = await fileToBase64(pendingImage);
+      var res = await fetch('/api/upload', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: pendingImage.name,
+          type: pendingImage.type,
+          content: base64
+        })
+      });
+      if (!res.ok) {
+        var err = await res.json().catch(function() { return {}; });
+        throw new Error(err.error || 'Upload failed');
+      }
+      var data = await res.json();
+      imagePath = data.path;
     } catch (err) {
       alert(sanitizeError(err));
       btn.disabled = false;
@@ -449,6 +310,8 @@ function removeImage() {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
+  loadGallery();
+
   var uploadZone = document.getElementById('upload-zone');
   var fileInput = document.getElementById('file-input');
 
@@ -515,8 +378,19 @@ async function saveChanges() {
       return cp;
     });
 
-    var result = await putFile('gallery.json', { photos: cleanPhotos }, fileSha, 'Update gallery [skip ci]');
-    fileSha = result.content.sha;
+    var res = await fetch('/api/gallery', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ photos: cleanPhotos, sha: fileSha })
+    });
+
+    if (!res.ok) {
+      var err = await res.json().catch(function() { return {}; });
+      throw new Error(err.error || 'Save failed');
+    }
+
+    var data = await res.json();
+    fileSha = data.sha;
     setDirty(false);
     showStatus('Saved successfully!', 'success');
     setTimeout(function() { showStatus('', ''); }, 3000);
@@ -527,27 +401,32 @@ async function saveChanges() {
   btn.disabled = false;
 }
 
+function fileToBase64(file) {
+  return new Promise(function(resolve, reject) {
+    var reader = new FileReader();
+    reader.onload = function() {
+      resolve(reader.result.split(',')[1]);
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
 function sanitizeError(err) {
   var msg = err && err.message ? err.message : String(err);
   if (msg.indexOf('401') !== -1 || msg.indexOf('Unauthorized') !== -1 || msg.indexOf('Bad credentials') !== -1) {
-    return 'Invalid or expired token. Please check your Personal Access Token.';
+    return 'Authentication failed. Check your Vercel environment variables.';
   }
   if (msg.indexOf('403') !== -1 || msg.indexOf('Forbidden') !== -1) {
-    return 'Permission denied. Ensure token has "repo" scope.';
+    return 'Permission denied. Check your GitHub PAT token scope.';
   }
   if (msg.indexOf('404') !== -1 || msg.indexOf('Not Found') !== -1) {
-    return 'Repository not found. Check owner, repo name, and branch.';
-  }
-  if (msg.indexOf('422') !== -1 || msg.indexOf('Unprocessable') !== -1) {
-    return 'Invalid request. File may be too large or branch protection enabled.';
-  }
-  if (msg.indexOf('429') !== -1 || msg.indexOf('rate limit') !== -1) {
-    return 'Rate limited. Please wait a moment and try again.';
+    return 'Repository not found. Check your Vercel environment variables.';
   }
   if (msg.indexOf('Network') !== -1 || msg.indexOf('Failed to fetch') !== -1) {
     return 'Network error. Check your connection.';
   }
-  return 'An error occurred. Please try again.';
+  return msg || 'An error occurred. Please try again.';
 }
 
 function showStatus(msg, type) {
