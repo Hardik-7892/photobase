@@ -456,3 +456,7 @@ function escapeHtml(str) {
   div.textContent = str;
   return div.innerHTML;
 }
+
+function adminLogout() {
+  window.location.href = 'https://log:out@' + window.location.host + '/manage/';
+}

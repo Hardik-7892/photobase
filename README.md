@@ -8,7 +8,7 @@ A full photographer portfolio website with an admin panel to manage photos from 
 
 ## Quick Start (1-Click Deploy)
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FHardik-7892%2Fphotobase&env=GITHUB_OWNER,GITHUB_REPO,GITHUB_BRANCH,GITHUB_PAT&project-name=photobase&repository-name=photobase)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FHardik-7892%2Fphotobase&env=GITHUB_OWNER,GITHUB_REPO,GITHUB_BRANCH,GITHUB_PAT,ADMIN_USERNAME,ADMIN_PASSWORD&project-name=photobase&repository-name=photobase)
 
 Click the button above to:
 
@@ -43,6 +43,8 @@ When Vercel prompts you, set these:
 | `GITHUB_REPO` | `photobase` (or your repo name) |
 | `GITHUB_BRANCH` | `main` (or your branch name) |
 | `GITHUB_PAT` | the fine-grained token |
+| `ADMIN_USERNAME` | username to access the admin panel |
+| `ADMIN_PASSWORD` | password to access the admin panel |
 
 You can also change them later in **Vercel Dashboard &rarr; Project &rarr; Settings &rarr; Environment Variables**.
 
