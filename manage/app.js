@@ -3,6 +3,7 @@ var owner, repo, branch, token;
 var photos = [];
 var fileSha = null;
 var pendingImage = null;
+var dirty = false;
 
 const MAX_TITLE_LEN = 100;
 const MAX_CATEGORY_LEN = 50;
@@ -92,6 +93,16 @@ async function connect() {
     return showStatus('Fill in all required fields.', 'error');
   }
 
+  if (!/^[a-zA-Z0-9](?:[a-zA-Z0-9._-]*[a-zA-Z0-9])?$/.test(owner)) {
+    return showStatus('Invalid repository owner format.', 'error');
+  }
+  if (!/^[a-zA-Z0-9._-]+$/.test(repo)) {
+    return showStatus('Invalid repository name format.', 'error');
+  }
+  if (!/^[a-zA-Z0-9._\-\/]+$/.test(branch)) {
+    return showStatus('Invalid branch name format.', 'error');
+  }
+
   showStatus('Verifying token...', 'loading');
   try {
     var res = await fetch('https://api.github.com/user', {
@@ -121,6 +132,7 @@ async function loadGallery() {
     showDashboard();
     renderPhotos();
     showStatus('Connected', 'success');
+    checkTokenRotation();
   } catch (err) {
     if (err.message.indexOf('404') !== -1 || err.message.indexOf('Not Found') !== -1) {
       fileSha = null;
@@ -131,6 +143,20 @@ async function loadGallery() {
     } else {
       showStatus(sanitizeError(err), 'error');
     }
+  }
+}
+
+function checkTokenRotation() {
+  var key = 'photobase_token_first_connected';
+  var firstConnected = localStorage.getItem(key);
+  var now = Date.now();
+  if (!firstConnected) {
+    localStorage.setItem(key, String(now));
+    return;
+  }
+  var daysSince = Math.floor((now - parseInt(firstConnected, 10)) / 86400000);
+  if (daysSince >= 30) {
+    showStatus('Connected. Tip: rotate your token if it has been a while for security.', '');
   }
 }
 
@@ -208,6 +234,7 @@ function disconnect() {
   photos = [];
   fileSha = null;
   pendingImage = null;
+  setDirty(false);
   document.getElementById('connect-form').style.display = 'block';
   document.getElementById('dashboard').style.display = 'none';
   document.getElementById('save-status').textContent = '';
@@ -260,6 +287,20 @@ function renderPhotos() {
 
 var dragSrcIndex = null;
 
+function setDirty(val) {
+  dirty = val;
+  var btn = document.getElementById('save-btn');
+  if (dirty) {
+    btn.textContent = 'Save Changes ⬩';
+    btn.style.outline = '2px solid #e67e22';
+    btn.style.outlineOffset = '2px';
+  } else {
+    btn.textContent = 'Save Changes';
+    btn.style.outline = 'none';
+    btn.style.outlineOffset = '0';
+  }
+}
+
 function handleDragStart(e) {
   dragSrcIndex = parseInt(this.dataset.index);
   this.classList.add('dragging');
@@ -290,7 +331,7 @@ function handleDrop(e) {
     photos.splice(targetIndex, 0, moved);
     photos.forEach(function(p, i) { p.order = i + 1; });
     renderPhotos();
-    showStatus('Reordered — click Save to commit', '');
+    setDirty(true);
   }
   dragSrcIndex = null;
 }
@@ -348,7 +389,7 @@ function deletePhoto(index) {
   photos.splice(index, 1);
   photos.forEach(function(p, i) { p.order = i + 1; });
   renderPhotos();
-  showStatus('Photo removed — click Save to commit', '');
+  setDirty(true);
 }
 
 async function savePhoto() {
@@ -399,7 +440,7 @@ async function savePhoto() {
 
   renderPhotos();
   closeModal();
-  showStatus('Changes pending — click Save to commit', '');
+  setDirty(true);
 }
 
 function removeImage() {
@@ -476,6 +517,7 @@ async function saveChanges() {
 
     var result = await putFile('gallery.json', { photos: cleanPhotos }, fileSha, 'Update gallery');
     fileSha = result.content.sha;
+    setDirty(false);
     showStatus('Saved successfully!', 'success');
     setTimeout(function() { showStatus('', ''); }, 3000);
   } catch (err) {
