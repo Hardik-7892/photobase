@@ -9,7 +9,7 @@ media_folder: assets/images
 public_folder: assets/images
 site_url: https://hardik-7892.github.io/photobase/
 display_url: https://hardik-7892.github.io/photobase/
-logo: false
+# logo: false
 
 collections:
   - name: gallery
