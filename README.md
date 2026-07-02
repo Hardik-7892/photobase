@@ -1,11 +1,9 @@
 # Photobase
 
-A photographer portfolio website that works on GitHub Pages — with **two admin options** to manage photos.
+A photographer portfolio website that works on GitHub Pages — with an admin panel to manage photos.
 
-- **Decap CMS** (`/admin/`) — professional GUI with OAuth login and built-in media library
-- **Custom Admin** (`/manage/`) — lightweight alternative using a GitHub Personal Access Token
-
-Both write to the same `gallery.json`, so you can use either — or both.
+- **Gallery** (`index.html`) — responsive masonry layout, category filters, lightbox
+- **Admin** (`/manage/`) — connect with a GitHub PAT to add, remove, reorder, and edit photos
 
 ---
 
@@ -14,104 +12,60 @@ Both write to the same `gallery.json`, so you can use either — or both.
 1. **Fork** this repo or push it to your GitHub account
 2. Go to **Settings > Pages** and enable GitHub Pages from the `main` branch root
 3. Your gallery is live at `https://your-username.github.io/photobase/`
-4. Choose an admin option below
+4. Open `https://your-username.github.io/photobase/manage/` to start adding photos
 
 ---
 
-## Option A: Decap CMS (`/admin/`)
-
-Full-featured admin panel. Requires a one-time GitHub OAuth App setup.
-
-### Step 1: Register a GitHub OAuth App
-
-1. Go to **GitHub Settings > Developer settings > OAuth Apps > New OAuth App**
-2. Fill in:
-   - **Application name:** `Photobase`
-   - **Homepage URL:** `https://your-username.github.io/photobase/`
-   - **Authorization callback URL:** `https://your-username.github.io/photobase/`
-3. Click **Register application**
-4. Copy the **Client ID** displayed on the next page
-
-### Step 2: Update the config
-
-Edit `admin/config.yml`:
-
-```yaml
-backend:
-  name: github
-  repo: your-username/photobase
-  branch: main
-  auth_type: implicit
-  app_id: YOUR_CLIENT_ID
-```
-
-Replace `your-username/photobase` with your repo and `YOUR_CLIENT_ID` with the Client ID from step 1.
-
-### Step 3: Visit the admin panel
-
-Go to `https://your-username.github.io/photobase/admin/` and sign in with GitHub.
-
----
-
-## Option B: Custom Admin (`/manage/`)
-
-Lightweight admin. No OAuth setup needed — just a Personal Access Token.
-
-### Step 1: Generate a GitHub token
+## Setup: Generate a GitHub Token
 
 1. Go to **GitHub Settings > Developer settings > Personal access tokens > Tokens (classic)**
 2. Click **Generate new token (classic)**
 3. Give it a name like `Photobase`
-4. Select the **`repo`** scope (full control of private repositories)
-5. Click **Generate token**
-6. **Copy the token immediately** — you won't see it again
+4. Under **Expiration**, choose **No expiration**
+5. Under **Scopes**, check **`repo`** (full control of private repositories)
+6. Click **Generate token**
+7. **Copy the token** — it starts with `github_pat_...` or `ghp_...`
 
-### Step 2: Open the manager
+## Connect the Admin
 
-Go to `https://your-username.github.io/photobase/manage/` and enter:
-- **Owner:** your GitHub username
-- **Repo:** `photobase` (or whatever you named the repo)
-- **Branch:** `main`
-- **Token:** the token you just generated
+Open `https://your-username.github.io/photobase/manage/` and enter:
 
-Click **Connect** and you're in.
+| Field | Value |
+|---|---|
+| Repository Owner | your GitHub username |
+| Repository Name | `photobase` |
+| Branch | `main` |
+| Personal Access Token | the token you generated |
 
-### Features
+Click **Connect**.
 
-| | Decap CMS | Custom Admin |
-|---|---|---|
-| Auth | GitHub OAuth (1-time setup) | Personal Access Token |
-| Add photos | Media Library + entry form | Drag-and-drop upload + form |
-| Remove | Delete button per entry | Delete button per card |
-| Reorder | Drag items in list | Drag cards by handle |
-| Edit metadata | Inline form | Modal form |
-| Image upload | Built-in media manager | File picker or drag-and-drop |
+## Admin Features
 
----
+- **Add photos** — drag-and-drop or click to select an image, fill in title/category
+- **Reorder** — drag cards by the handle (⠿) to rearrange order
+- **Edit** — click Edit on any card to change title, category, or description
+- **Delete** — click Delete to remove a photo
+- **Save** — click **Save Changes** to commit everything to your repo
 
 ## File Structure
 
 ```
 photobase/
-├── index.html          Gallery page (Alpine.js)
-├── style.css           Global styles
-├── gallery.json        Photo data (managed by both admins)
-├── admin/
-│   ├── index.html      Decap CMS entry
-│   └── config.yml      Decap CMS configuration
+├── index.html       Gallery page (Alpine.js)
+├── style.css        Global styles
+├── gallery.json     Photo data (edit via /manage/)
 ├── manage/
-│   ├── index.html      Custom admin page
-│   └── app.js          Custom admin logic
+│   ├── index.html   Admin page
+│   └── app.js       Admin logic (GitHub API)
 └── assets/
-    └── images/         Uploaded photos
+    └── images/      Uploaded photos
 ```
 
 ## Customization
 
-- **Colors:** Edit CSS variables in `style.css` (`--text`, `--bg`, `--accent`)
-- **Masonry columns:** Adjust `columns: 3` in `.photo-grid` (also has `1024px` and `640px` breakpoints)
-- **Header / site name:** Edit the `<h1>` in `index.html`
-- **Sample data:** Replace `gallery.json` with your own photos. Remove the `id` field if you want — the gallery handles missing IDs.
+- **Colors:** Edit CSS variables in `style.css` (`--text`, `--bg`, `--border`)
+- **Masonry columns:** Adjust `columns: 3` in `.photo-grid` (also has responsive breakpoints)
+- **Site name:** Edit the `<h1>` in `index.html`
 
 ## License
 
