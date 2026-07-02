@@ -6,7 +6,8 @@
       "image": "assets/images/samples/urban-pulse.jpg",
       "category": "Street",
       "description": "The energy of city life in motion.",
-      "order": 1
+      "order": 1,
+      "featured": true
     },
     {
       "id": "mountain-serenity",
