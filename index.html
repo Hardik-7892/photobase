@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Photobase — Portfolio</title>
+  <link rel="stylesheet" href="style.css" />
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+</head>
+<body>
+  <header>
+    <h1>Photobase</h1>
+    <nav>
+      <a href="admin/">Admin</a>
+      <a href="manage/">Manage</a>
+    </nav>
+  </header>
+
+  <main x-data="gallery()" x-init="init()" @keydown.window="handleKeydown($event)">
+    <div class="filters">
+      <template x-for="cat in categories" :key="cat">
+        <button
+          class="filter-btn"
+          :class="{ active: filter === cat }"
+          x-text="cat"
+          @click="filter = cat; currentIndex = 0"
+        ></button>
+      </template>
+    </div>
+
+    <div class="photo-grid" x-show="filteredPhotos.length > 0">
+      <template x-for="(photo, index) in filteredPhotos" :key="photo.id || index">
+        <div class="photo-card" @click="openLightbox(photo)">
+          <img :src="photo.image" :alt="photo.title" loading="lazy" />
+          <div class="info">
+            <h3 x-text="photo.title"></h3>
+            <span x-text="photo.category || 'Uncategorized'"></span>
+          </div>
+        </div>
+      </template>
+    </div>
+
+    <div class="empty-state" x-show="photos.length === 0">
+      <h2>No photos yet</h2>
+      <p>Visit the admin panel to add your first photo.</p>
+    </div>
+
+    <div
+      class="lightbox-overlay"
+      x-show="lightboxOpen"
+      x-cloak
+      @click.self="closeLightbox()"
+    >
+      <div class="lightbox-content" x-show="currentPhoto">
+        <button class="lightbox-close" @click="closeLightbox()">&times;</button>
+        <button class="lightbox-nav lightbox-prev" @click="prevPhoto()">&lsaquo;</button>
+        <img :src="currentPhoto?.image" :alt="currentPhoto?.title" />
+        <button class="lightbox-nav lightbox-next" @click="nextPhoto()">&rsaquo;</button>
+        <div class="lightbox-info">
+          <h3 x-text="currentPhoto?.title"></h3>
+          <p x-text="currentPhoto?.description"></p>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    function gallery() {
+      return {
+        photos: [],
+        categories: ['All'],
+        filter: 'All',
+        lightboxOpen: false,
+        currentIndex: 0,
+
+        get filteredPhotos() {
+          if (this.filter === 'All') return this.photos;
+          return this.photos.filter(function(p) {
+            return p.category === this.filter;
+          }.bind(this));
+        },
+
+        get currentPhoto() {
+          return this.filteredPhotos[this.currentIndex];
+        },
+
+        async init() {
+          try {
+            var res = await fetch('gallery.json?_=' + Date.now());
+            var data = await res.json();
+            var items = data.photos || [];
+            items.sort(function(a, b) { return (a.order || 0) - (b.order || 0); });
+            this.photos = items;
+            var catSet = {};
+            items.forEach(function(p) { if (p.category) catSet[p.category] = true; });
+            this.categories = ['All'].concat(Object.keys(catSet));
+          } catch (e) {
+            console.error('Failed to load gallery:', e);
+          }
+        },
+
+        openLightbox: function(photo) {
+          var idx = this.filteredPhotos.indexOf(photo);
+          if (idx === -1) idx = 0;
+          this.currentIndex = idx;
+          this.lightboxOpen = true;
+          document.body.style.overflow = 'hidden';
+        },
+
+        closeLightbox: function() {
+          this.lightboxOpen = false;
+          document.body.style.overflow = '';
+        },
+
+        nextPhoto: function() {
+          var len = this.filteredPhotos.length;
+          if (len === 0) return;
+          this.currentIndex = (this.currentIndex + 1) % len;
+        },
+
+        prevPhoto: function() {
+          var len = this.filteredPhotos.length;
+          if (len === 0) return;
+          this.currentIndex = (this.currentIndex - 1 + len) % len;
+        },
+
+        handleKeydown: function(e) {
+          if (!this.lightboxOpen) return;
+          if (e.key === 'Escape') { this.closeLightbox(); }
+          else if (e.key === 'ArrowRight') { this.nextPhoto(); }
+          else if (e.key === 'ArrowLeft') { this.prevPhoto(); }
+        }
+      };
+    }
+  </script>
+</body>
+</html>

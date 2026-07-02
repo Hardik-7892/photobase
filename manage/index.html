@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Photobase — Manage</title>
+  <link rel="stylesheet" href="../style.css" />
+  <style>
+    .connect-form {
+      max-width: 420px;
+      margin: 80px auto;
+      padding: 40px 32px;
+      background: var(--surface);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    .connect-form h1 {
+      font-size: 1.4rem;
+      margin-bottom: 24px;
+      text-align: center;
+    }
+
+    .form-group {
+      margin-bottom: 14px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 0.82rem;
+      font-weight: 500;
+      margin-bottom: 4px;
+      color: var(--text-secondary);
+    }
+
+    .form-group input,
+    .form-group textarea {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 0.9rem;
+      font-family: inherit;
+      background: var(--surface);
+      color: var(--text);
+    }
+
+    .form-group input:focus,
+    .form-group textarea:focus {
+      outline: none;
+      border-color: var(--text);
+    }
+
+    .btn {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.88rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.2s, opacity 0.2s;
+      font-family: inherit;
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .btn-primary {
+      background: var(--text);
+      color: white;
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      background: #333;
+    }
+
+    .btn-danger {
+      background: #e74c3c;
+      color: white;
+    }
+
+    .btn-danger:hover:not(:disabled) {
+      background: #c0392b;
+    }
+
+    .btn-outline {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text);
+    }
+
+    .btn-outline:hover:not(:disabled) {
+      background: var(--bg);
+    }
+
+    .hint {
+      font-size: 0.78rem;
+      color: var(--text-secondary);
+      text-align: center;
+      margin-top: 16px;
+      line-height: 1.5;
+    }
+
+    .hint a {
+      color: var(--text);
+    }
+
+    .hint code {
+      font-size: 0.75rem;
+      background: var(--bg);
+      padding: 1px 6px;
+      border-radius: 3px;
+    }
+
+    .dashboard-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 24px;
+      background: var(--text);
+      color: white;
+    }
+
+    .dashboard-header h2 {
+      font-size: 1.05rem;
+      font-weight: 600;
+    }
+
+    .dashboard-header .repo-badge {
+      font-size: 0.78rem;
+      color: rgba(255,255,255,0.55);
+    }
+
+    .dashboard-header .btn-outline {
+      color: white;
+      border-color: rgba(255,255,255,0.3);
+      font-size: 0.8rem;
+      padding: 6px 14px;
+    }
+
+    .dashboard-header .btn-outline:hover {
+      border-color: rgba(255,255,255,0.6);
+    }
+
+    .toolbar {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      padding: 14px 24px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      flex-wrap: wrap;
+    }
+
+    .save-status {
+      font-size: 0.82rem;
+      color: var(--text-secondary);
+      margin-left: auto;
+    }
+
+    .save-status.success { color: #27ae60; }
+    .save-status.error { color: #e74c3c; }
+    .save-status.loading { color: #e67e22; }
+
+    .admin-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 16px;
+      padding: 24px;
+    }
+
+    .admin-card {
+      background: var(--surface);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      transition: transform 0.2s, opacity 0.2s;
+      position: relative;
+    }
+
+    .admin-card.dragging {
+      opacity: 0.4;
+      transform: scale(0.96);
+    }
+
+    .admin-card.drag-over {
+      outline: 2px dashed var(--text);
+      outline-offset: -2px;
+    }
+
+    .admin-card img {
+      width: 100%;
+      height: 180px;
+      object-fit: cover;
+      display: block;
+    }
+
+    .admin-card .card-body {
+      padding: 12px;
+    }
+
+    .admin-card .card-body h4 {
+      font-size: 0.88rem;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .admin-card .card-body .category-tag {
+      font-size: 0.72rem;
+      color: var(--text-secondary);
+      background: var(--bg);
+      padding: 2px 8px;
+      border-radius: 10px;
+      display: inline-block;
+    }
+
+    .admin-card .card-actions {
+      display: flex;
+      gap: 4px;
+      padding: 8px 12px;
+      border-top: 1px solid var(--border);
+    }
+
+    .admin-card .card-actions button {
+      flex: 1;
+      padding: 6px;
+      border: none;
+      border-radius: 4px;
+      font-size: 0.78rem;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .drag-handle {
+      position: absolute;
+      top: 8px;
+      left: 8px;
+      background: rgba(0,0,0,0.45);
+      color: white;
+      width: 28px;
+      height: 28px;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: grab;
+      font-size: 1.1rem;
+      user-select: none;
+      z-index: 2;
+      line-height: 1;
+    }
+
+    .drag-handle:active {
+      cursor: grabbing;
+    }
+
+    .modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+
+    .modal-content {
+      background: var(--surface);
+      border-radius: var(--radius);
+      padding: 32px;
+      width: 100%;
+      max-width: 480px;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+
+    .modal-content h3 {
+      font-size: 1.15rem;
+      margin-bottom: 20px;
+    }
+
+    .modal-close {
+      float: right;
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: var(--text-secondary);
+      line-height: 1;
+      padding: 0 4px;
+    }
+
+    .upload-zone {
+      border: 2px dashed var(--border);
+      border-radius: 6px;
+      padding: 28px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+      color: var(--text-secondary);
+      font-size: 0.85rem;
+    }
+
+    .upload-zone:hover {
+      border-color: var(--text);
+    }
+
+    .upload-zone.drag-over {
+      border-color: var(--text);
+      background: var(--bg);
+    }
+
+    .preview-container {
+      margin-top: 12px;
+    }
+
+    .preview-container img {
+      max-width: 100%;
+      max-height: 200px;
+      border-radius: 4px;
+      display: block;
+    }
+
+    .preview-container .btn {
+      margin-top: 8px;
+      width: 100%;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 20px;
+    }
+
+    .modal-actions .btn {
+      flex: 1;
+    }
+
+    @media (max-width: 640px) {
+      .admin-grid {
+        grid-template-columns: 1fr;
+        padding: 16px;
+      }
+
+      .connect-form {
+        margin: 40px 16px;
+        padding: 24px 20px;
+      }
+
+      .toolbar {
+        padding: 12px 16px;
+      }
+
+      .dashboard-header {
+        padding: 12px 16px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Photobase</h1>
+    <nav>
+      <a href="../">Gallery</a>
+      <a href="../admin/">Decap CMS</a>
+    </nav>
+  </header>
+
+  <div id="connect-form" class="connect-form">
+    <h1>Connect to GitHub</h1>
+
+    <div class="form-group">
+      <label for="owner">Repository Owner</label>
+      <input id="owner" placeholder="e.g. your-username" autocomplete="off" />
+    </div>
+
+    <div class="form-group">
+      <label for="repo">Repository Name</label>
+      <input id="repo" placeholder="e.g. photobase" value="photobase" autocomplete="off" />
+    </div>
+
+    <div class="form-group">
+      <label for="branch">Branch</label>
+      <input id="branch" value="main" autocomplete="off" />
+    </div>
+
+    <div class="form-group">
+      <label for="token">Personal Access Token</label>
+      <input id="token" type="password" placeholder="github_pat_..." autocomplete="off" />
+    </div>
+
+    <button class="btn btn-primary" onclick="connect()" style="width:100%">Connect</button>
+
+    <p class="hint">
+      Need a token?
+      <a href="https://github.com/settings/tokens/new?scopes=repo&description=Photobase" target="_blank">
+        Generate one
+      </a>
+      with <code>repo</code> scope.
+    </p>
+  </div>
+
+  <div id="dashboard" style="display:none">
+    <div class="dashboard-header">
+      <div>
+        <h2>Photobase Manager</h2>
+        <span class="repo-badge" id="repo-badge"></span>
+      </div>
+      <button class="btn btn-outline" onclick="disconnect()">Disconnect</button>
+    </div>
+
+    <div class="toolbar">
+      <button class="btn btn-primary" onclick="openAddModal()">+ Add Photo</button>
+      <button class="btn btn-primary" onclick="saveChanges()" id="save-btn">Save Changes</button>
+      <span class="save-status" id="save-status"></span>
+    </div>
+
+    <div id="photo-grid" class="admin-grid"></div>
+  </div>
+
+  <div id="modal" class="modal" style="display:none">
+    <div class="modal-content">
+      <button class="modal-close" onclick="closeModal()">&times;</button>
+      <h3 id="modal-title">Add Photo</h3>
+
+      <div class="form-group">
+        <label for="photo-title">Title</label>
+        <input id="photo-title" placeholder="Photo title" />
+      </div>
+
+      <div class="form-group">
+        <label for="photo-category">Category</label>
+        <input id="photo-category" placeholder="e.g. Landscape, Portrait" />
+      </div>
+
+      <div class="form-group">
+        <label for="photo-description">Description</label>
+        <textarea id="photo-description" rows="3" placeholder="Optional description"></textarea>
+      </div>
+
+      <div class="form-group">
+        <label>Image</label>
+        <div class="upload-zone" id="upload-zone">
+          <p>Drop an image here or click to select</p>
+        </div>
+        <input type="file" id="file-input" accept="image/*" style="display:none" />
+        <div class="preview-container" id="preview-container" style="display:none">
+          <img id="preview-img" alt="Preview" />
+          <button class="btn btn-outline" onclick="removeImage()">Remove Image</button>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn btn-primary" onclick="savePhoto()" id="save-photo-btn">Add Photo</button>
+        <button class="btn btn-outline" onclick="closeModal()">Cancel</button>
+      </div>
+
+      <input type="hidden" id="edit-id" />
+      <input type="hidden" id="edit-index" />
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,46 @@
+backend:
+  name: github
+  repo: your-username/your-repo
+  branch: main
+  auth_type: implicit
+  app_id: YOUR_GITHUB_OAUTH_CLIENT_ID
+
+media_folder: assets/images
+public_folder: assets/images
+site_url: https://your-username.github.io/your-repo/
+display_url: https://your-username.github.io/your-repo/
+logo: false
+
+collections:
+  - name: gallery
+    label: Gallery
+    label_singular: Photo
+    description: Manage your portfolio photos
+    files:
+      - name: photos
+        label: Photos
+        file: gallery.json
+        fields:
+          - name: photos
+            label: Photos
+            widget: list
+            summary: "{{fields.title}}"
+            fields:
+              - { name: id, label: ID, widget: string, required: false }
+              - { name: title, label: Title, widget: string }
+              - { name: image, label: Image, widget: image }
+              - { name: category, label: Category, widget: string }
+              - {
+                  name: description,
+                  label: Description,
+                  widget: text,
+                  required: false
+                }
+              - {
+                  name: order,
+                  label: Order,
+                  widget: number,
+                  value_type: int,
+                  default: 0,
+                  required: false
+                }
