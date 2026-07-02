@@ -1,14 +1,14 @@
 backend:
   name: github
-  repo: your-username/your-repo
+  repo: Hardik-7892/photobase
   branch: main
   auth_type: implicit
-  app_id: YOUR_GITHUB_OAUTH_CLIENT_ID
+  app_id: Ov23liyc7gAE5l9M0Qcy
 
 media_folder: assets/images
 public_folder: assets/images
-site_url: https://your-username.github.io/your-repo/
-display_url: https://your-username.github.io/your-repo/
+site_url: https://hardik-7892.github.io/photobase/
+display_url: https://hardik-7892.github.io/photobase/
 logo: false
 
 collections:
