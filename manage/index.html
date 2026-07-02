@@ -364,12 +364,15 @@
   <header style="position:relative">
     <h1>Photobase</h1>
     <nav>
-      <a href="../">Gallery</a>
+      <a href="../">Portfolio</a>
     </nav>
   </header>
 
   <div id="connect-form" class="connect-form">
     <h1>Connect to GitHub</h1>
+    <p style="text-align:center;margin-bottom:20px;font-size:0.85rem;color:var(--text-secondary)">
+      <a href="../" style="color:var(--text)">&larr; Back to Portfolio</a>
+    </p>
 
     <div class="form-group">
       <label for="owner">Repository Owner</label>
@@ -404,9 +407,12 @@
 
   <div id="dashboard" style="display:none">
     <div class="dashboard-header">
-      <div>
-        <h2>Photobase Manager</h2>
-        <span class="repo-badge" id="repo-badge"></span>
+      <div style="display:flex;align-items:center;gap:16px">
+        <a href="../" style="color:rgba(255,255,255,0.5);font-size:0.82rem">&larr; Portfolio</a>
+        <div>
+          <h2>Photobase Manager</h2>
+          <span class="repo-badge" id="repo-badge"></span>
+        </div>
       </div>
       <button class="btn btn-outline" onclick="disconnect()">Disconnect</button>
     </div>
