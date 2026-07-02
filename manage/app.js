@@ -4,7 +4,85 @@ var photos = [];
 var fileSha = null;
 var pendingImage = null;
 
-function connect() {
+const MAX_TITLE_LEN = 100;
+const MAX_CATEGORY_LEN = 50;
+const MAX_DESCRIPTION_LEN = 500;
+const MAX_FILE_SIZE = 100 * 1024 * 1024;
+const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'video/mp4', 'video/webm', 'video/quicktime'];
+const ALLOWED_EXTENSIONS = ['jpg', 'jpeg', 'png', 'webp', 'gif', 'mp4', 'webm', 'mov'];
+const MAGIC_BYTES = {
+  'image/jpeg': [[0xFF, 0xD8, 0xFF]],
+  'image/png': [[0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]],
+  'image/webp': [[0x52, 0x49, 0x46, 0x46, null, null, null, null, 0x57, 0x45, 0x42, 0x50]],
+  'image/gif': [[0x47, 0x49, 0x46, 0x38]],
+  'video/mp4': [[0x00, 0x00, 0x00, 0x00, 0x66, 0x74, 0x79, 0x70], [0x00, 0x00, 0x00, 0x00, 0x6D, 0x6F, 0x6F, 0x76]],
+  'video/webm': [[0x1A, 0x45, 0xDF, 0xA3]],
+  'video/quicktime': [[0x00, 0x00, 0x00, 0x00, 0x66, 0x74, 0x79, 0x70]]
+};
+
+function sanitizeFilename(filename) {
+  var parts = filename.split('.');
+  var ext = parts.length > 1 ? parts[parts.length - 1].toLowerCase() : 'bin';
+  if (ALLOWED_EXTENSIONS.indexOf(ext) === -1) ext = 'bin';
+  var name = parts.slice(0, -1).join('.').replace(/[^a-zA-Z0-9._-]/g, '_').substring(0, 100);
+  return name + '.' + ext;
+}
+
+function validateMagicBytes(buffer, mimeType) {
+  var signatures = MAGIC_BYTES[mimeType];
+  if (!signatures) return false;
+  var bytes = new Uint8Array(buffer.slice(0, 12));
+  for (var i = 0; i < signatures.length; i++) {
+    var sig = signatures[i];
+    var match = true;
+    for (var j = 0; j < sig.length; j++) {
+      if (sig[j] !== null && bytes[j] !== sig[j]) {
+        match = false;
+        break;
+      }
+    }
+    if (match) return true;
+  }
+  return false;
+}
+
+async function validateFile(file) {
+  if (file.size > MAX_FILE_SIZE) {
+    throw new Error('File too large. Maximum size is ' + (MAX_FILE_SIZE / 1024 / 1024) + 'MB.');
+  }
+  if (ALLOWED_MIME_TYPES.indexOf(file.type) === -1) {
+    throw new Error('File type not allowed. Allowed: images (JPEG, PNG, WebP, GIF) and videos (MP4, WebM, MOV).');
+  }
+  var buffer = await file.arrayBuffer();
+  if (!validateMagicBytes(buffer, file.type)) {
+    throw new Error('File content does not match its type. Possible corrupt or malicious file.');
+  }
+  return true;
+}
+
+async function githubFetch(url, options, retries = 3) {
+  var res = await fetch(url, options);
+  var remaining = parseInt(res.headers.get('X-RateLimit-Remaining') || '1', 10);
+  var resetTime = parseInt(res.headers.get('X-RateLimit-Reset') || '0', 10);
+
+  if ((res.status === 403 || res.status === 429) && remaining === 0 && resetTime > 0) {
+    var waitMs = Math.max((resetTime * 1000) - Date.now(), 0) + 1000;
+    if (retries > 0) {
+      showStatus('Rate limited. Retrying in ' + Math.ceil(waitMs / 1000) + 's...', 'loading');
+      await new Promise(function(r) { return setTimeout(r, waitMs); });
+      return githubFetch(url, options, retries - 1);
+    }
+    throw new Error('Rate limit exceeded. Try again later.');
+  }
+
+  if (!res.ok) {
+    var errBody = await res.json().catch(function() { return {}; });
+    throw new Error(errBody.message || 'HTTP ' + res.status);
+  }
+  return res;
+}
+
+async function connect() {
   owner = document.getElementById('owner').value.trim();
   repo = document.getElementById('repo').value.trim();
   branch = document.getElementById('branch').value.trim();
@@ -12,6 +90,23 @@ function connect() {
 
   if (!owner || !repo || !token) {
     return showStatus('Fill in all required fields.', 'error');
+  }
+
+  showStatus('Verifying token...', 'loading');
+  try {
+    var res = await fetch('https://api.github.com/user', {
+      headers: { Authorization: 'token ' + token }
+    });
+    if (!res.ok) {
+      throw new Error('HTTP ' + res.status);
+    }
+    var scopes = res.headers.get('X-OAuth-Scopes') || '';
+    if (scopes.indexOf('repo') === -1) {
+      return showStatus('Token is missing "repo" scope. Generate a new token with repo scope.', 'error');
+    }
+  } catch (err) {
+    showStatus(sanitizeError(err), 'error');
+    return;
   }
 
   loadGallery();
@@ -34,20 +129,14 @@ async function loadGallery() {
       renderPhotos();
       showStatus('No gallery.json yet — add your first photo', '');
     } else {
-      showStatus('Failed: ' + err.message, 'error');
+      showStatus(sanitizeError(err), 'error');
     }
   }
 }
 
 async function getFile(path) {
   var url = API_BASE + '/repos/' + owner + '/' + repo + '/contents/' + encodeURI(path) + '?ref=' + branch;
-  var res = await fetch(url, {
-    headers: { Authorization: 'token ' + token }
-  });
-  if (!res.ok) {
-    var errBody = await res.json().catch(function() { return {}; });
-    throw new Error(errBody.message || 'HTTP ' + res.status);
-  }
+  var res = await githubFetch(url, { headers: { Authorization: 'token ' + token } });
   var data = await res.json();
   var content = JSON.parse(atob(data.content));
   return { sha: data.sha, content: content };
@@ -62,7 +151,7 @@ async function putFile(path, content, sha, message) {
   };
   if (sha) body.sha = sha;
 
-  var res = await fetch(url, {
+  var res = await githubFetch(url, {
     method: 'PUT',
     headers: {
       Authorization: 'token ' + token,
@@ -70,22 +159,19 @@ async function putFile(path, content, sha, message) {
     },
     body: JSON.stringify(body)
   });
-  if (!res.ok) {
-    var errBody = await res.json().catch(function() { return {}; });
-    throw new Error(errBody.message || 'HTTP ' + res.status);
-  }
   return res.json();
 }
 
 async function uploadImage(file) {
-  var parts = file.name.split('.');
-  var ext = parts.length > 1 ? parts[parts.length - 1].toLowerCase() : 'jpg';
+  var safeName = sanitizeFilename(file.name);
+  var parts = safeName.split('.');
+  var ext = parts.length > 1 ? parts[parts.length - 1].toLowerCase() : 'bin';
   var filename = Date.now() + '-' + Math.random().toString(36).substring(2, 8) + '.' + ext;
   var path = 'assets/images/' + filename;
   var base64 = await fileToBase64(file);
 
   var url = API_BASE + '/repos/' + owner + '/' + repo + '/contents/' + encodeURI(path);
-  var res = await fetch(url, {
+  var res = await githubFetch(url, {
     method: 'PUT',
     headers: {
       Authorization: 'token ' + token,
@@ -97,10 +183,6 @@ async function uploadImage(file) {
       branch: branch
     })
   });
-  if (!res.ok) {
-    var errBody = await res.json().catch(function() { return {}; });
-    throw new Error(errBody.message || 'Upload failed');
-  }
   return 'assets/images/' + filename;
 }
 
@@ -270,9 +352,9 @@ function deletePhoto(index) {
 }
 
 async function savePhoto() {
-  var title = document.getElementById('photo-title').value.trim();
-  var category = document.getElementById('photo-category').value.trim();
-  var description = document.getElementById('photo-description').value.trim();
+  var title = sanitizeInput(document.getElementById('photo-title').value, MAX_TITLE_LEN);
+  var category = sanitizeInput(document.getElementById('photo-category').value, MAX_CATEGORY_LEN);
+  var description = sanitizeInput(document.getElementById('photo-description').value, MAX_DESCRIPTION_LEN);
   var editId = document.getElementById('edit-id').value;
   var editIndex = document.getElementById('edit-index').value;
   var isEdit = editIndex !== '';
@@ -289,7 +371,7 @@ async function savePhoto() {
     try {
       imagePath = await uploadImage(pendingImage);
     } catch (err) {
-      alert('Image upload failed: ' + err.message);
+      alert(sanitizeError(err));
       btn.disabled = false;
       btn.textContent = isEdit ? 'Save Changes' : 'Add Photo';
       return;
@@ -346,27 +428,32 @@ document.addEventListener('DOMContentLoaded', function() {
     e.preventDefault();
     uploadZone.classList.remove('drag-over');
     var file = e.dataTransfer.files[0];
-    if (file && file.type.indexOf('image/') === 0) {
-      handleImageFile(file);
+    if (file) {
+      handleFile(file);
     }
   });
 
   fileInput.addEventListener('change', function() {
     if (fileInput.files[0]) {
-      handleImageFile(fileInput.files[0]);
+      handleFile(fileInput.files[0]);
       fileInput.value = '';
     }
   });
 });
 
-function handleImageFile(file) {
-  pendingImage = file;
-  var reader = new FileReader();
-  reader.onload = function(e) {
-    document.getElementById('preview-img').src = e.target.result;
-    document.getElementById('preview-container').style.display = 'block';
-  };
-  reader.readAsDataURL(file);
+async function handleFile(file) {
+  try {
+    await validateFile(file);
+    pendingImage = file;
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      document.getElementById('preview-img').src = e.target.result;
+      document.getElementById('preview-container').style.display = 'block';
+    };
+    reader.readAsDataURL(file);
+  } catch (err) {
+    alert(err.message);
+  }
 }
 
 async function saveChanges() {
@@ -392,10 +479,33 @@ async function saveChanges() {
     showStatus('Saved successfully!', 'success');
     setTimeout(function() { showStatus('', ''); }, 3000);
   } catch (err) {
-    showStatus('Save failed: ' + err.message, 'error');
+    showStatus(sanitizeError(err), 'error');
   }
 
   btn.disabled = false;
+}
+
+function sanitizeError(err) {
+  var msg = err && err.message ? err.message : String(err);
+  if (msg.indexOf('401') !== -1 || msg.indexOf('Unauthorized') !== -1 || msg.indexOf('Bad credentials') !== -1) {
+    return 'Invalid or expired token. Please check your Personal Access Token.';
+  }
+  if (msg.indexOf('403') !== -1 || msg.indexOf('Forbidden') !== -1) {
+    return 'Permission denied. Ensure token has "repo" scope.';
+  }
+  if (msg.indexOf('404') !== -1 || msg.indexOf('Not Found') !== -1) {
+    return 'Repository not found. Check owner, repo name, and branch.';
+  }
+  if (msg.indexOf('422') !== -1 || msg.indexOf('Unprocessable') !== -1) {
+    return 'Invalid request. File may be too large or branch protection enabled.';
+  }
+  if (msg.indexOf('429') !== -1 || msg.indexOf('rate limit') !== -1) {
+    return 'Rate limited. Please wait a moment and try again.';
+  }
+  if (msg.indexOf('Network') !== -1 || msg.indexOf('Failed to fetch') !== -1) {
+    return 'Network error. Check your connection.';
+  }
+  return 'An error occurred. Please try again.';
 }
 
 function showStatus(msg, type) {
@@ -409,6 +519,15 @@ function generateId(title) {
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-|-$/g, '')
     .substring(0, 40) || 'photo-' + Date.now();
+}
+
+function sanitizeInput(str, maxLen) {
+  if (typeof str !== 'string') return '';
+  var trimmed = str.trim();
+  if (maxLen && trimmed.length > maxLen) trimmed = trimmed.substring(0, maxLen);
+  var div = document.createElement('div');
+  div.textContent = trimmed;
+  return div.innerHTML;
 }
 
 function escapeHtml(str) {
