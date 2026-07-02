@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Photobase &mdash; Login</title>
+  <link rel="stylesheet" href="../style.css" />
+  <style>
+    .login-page {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .login-card {
+      width: 100%;
+      max-width: 380px;
+      background: var(--surface);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 40px 32px;
+    }
+
+    .login-card h1 {
+      font-size: 1.3rem;
+      font-weight: 500;
+      text-align: center;
+      margin-bottom: 8px;
+    }
+
+    .login-card p {
+      text-align: center;
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      margin-bottom: 28px;
+    }
+
+    .login-card .form-group {
+      margin-bottom: 16px;
+    }
+
+    .login-card .form-group label {
+      display: block;
+      font-size: 0.82rem;
+      font-weight: 500;
+      margin-bottom: 4px;
+      color: var(--text-secondary);
+    }
+
+    .login-card .form-group input {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 0.9rem;
+      font-family: inherit;
+      background: var(--surface);
+      color: var(--text);
+    }
+
+    .login-card .form-group input:focus {
+      outline: none;
+      border-color: var(--text);
+    }
+
+    .login-card .btn {
+      width: 100%;
+      margin-top: 8px;
+    }
+
+    .login-card .error-msg {
+      background: #fef2f2;
+      color: #b91c1c;
+      font-size: 0.82rem;
+      padding: 10px 14px;
+      border-radius: 6px;
+      margin-bottom: 16px;
+      text-align: center;
+      display: none;
+    }
+
+    .login-card .error-msg.show {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <div class="login-page">
+    <div class="login-card">
+      <h1>Photobase</h1>
+      <p>Enter your admin credentials</p>
+
+      <div class="error-msg" id="error-msg">Invalid username or password.</div>
+
+      <form method="POST" action="/manage/login" id="login-form">
+        <div class="form-group">
+          <label for="username">Username</label>
+          <input id="username" name="username" type="text" autocomplete="username" required autofocus />
+        </div>
+
+        <div class="form-group">
+          <label for="password">Password</label>
+          <input id="password" name="password" type="password" autocomplete="current-password" required />
+        </div>
+
+        <button type="submit" class="btn btn-primary">Log In</button>
+      </form>
+
+      <p style="margin-top:20px;font-size:0.75rem;color:var(--text-light);text-align:center">
+        <a href="../" style="color:var(--text)">&larr; Back to Portfolio</a>
+      </p>
+    </div>
+  </div>
+
+  <script>
+    var params = new URLSearchParams(window.location.search);
+    if (params.get('failed') === '1') {
+      document.getElementById('error-msg').classList.add('show');
+    }
+  </script>
+</body>
+</html>

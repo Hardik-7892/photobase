@@ -303,6 +303,38 @@ header.scrolled .hamburger span {
   margin-bottom: 32px;
 }
 
+.filters-scroll {
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  justify-content: flex-start;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  padding-bottom: 8px;
+}
+.filters-scroll::-webkit-scrollbar { display: none; }
+
+.filter-dropdown {
+  display: none;
+  padding: 8px 16px;
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 8px;
+  background: transparent;
+  color: rgba(255,255,255,0.8);
+  font-size: 0.85rem;
+  font-family: inherit;
+  cursor: pointer;
+  margin-bottom: 24px;
+  max-width: 300px;
+  width: 100%;
+}
+.filter-dropdown option { background: #111; color: white; }
+
+@media (max-width: 600px) {
+  .filter-dropdown { display: block; }
+  .filters-scroll { display: none; }
+  .filters.filters-scroll { display: none; }
+}
+
 .filter-btn {
   padding: 6px 18px;
   border: 1px solid rgba(255,255,255,0.2);

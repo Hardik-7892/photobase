@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gallery — Photobase</title>
+  <link rel="stylesheet" href="style.css" />
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.3/dist/cdn.min.js" integrity="sha384-Rpe/8orFUm5Q1GplYBHxbuA8Az8O8C5sAoOsdbRWkqPjKFaxPgGZipj4zeHL7lxX" crossorigin="anonymous"></script>
+  <style>
+    .gallery-page section { padding: 40px 0 80px; }
+    .gallery-page .section-title { margin-bottom: 4px; }
+    .gallery-page .section-subtitle { margin-bottom: 32px; }
+    .gallery-back { display: inline-block; margin-bottom: 24px; color: rgba(255,255,255,0.6); text-decoration: none; font-size: 0.85rem; }
+    .gallery-back:hover { color: white; }
+    .gallery-page .empty-state { margin-top: 32px; }
+  </style>
+</head>
+<body x-data="galleryPage()" x-init="init()" @keydown.window="handleKeydown($event)" x-cloak class="gallery-page">
+
+  <section>
+    <div class="container">
+      <a href="index.html" class="gallery-back">&larr; Back to Home</a>
+      <h2 class="section-title">Full Gallery</h2>
+      <p class="section-subtitle">Browse all my work</p>
+
+      <select class="filter-dropdown" x-show="photos.length > 0" x-model="filter" @change="currentIndex = 0">
+        <template x-for="cat in categories" :key="cat">
+          <option :value="cat" x-text="cat" :selected="filter === cat"></option>
+        </template>
+      </select>
+
+      <div class="filters filters-scroll" x-show="photos.length > 0">
+        <template x-for="cat in categories" :key="cat">
+          <button class="filter-btn" :class="{ active: filter === cat }" x-text="cat" @click="filter = cat; currentIndex = 0"></button>
+        </template>
+      </div>
+
+      <div class="photo-grid" x-show="photos.length > 0 && filteredPhotos.length > 0">
+        <template x-for="(photo, index) in filteredPhotos" :key="photo.id || index">
+          <div class="photo-card" @click="openLightbox(photo)">
+            <img :src="photo.image" :alt="photo.title" loading="lazy" />
+          </div>
+        </template>
+      </div>
+
+      <div class="empty-state" x-show="loadError">
+        <h2>Failed to load gallery</h2>
+        <p>Unable to load photos. Please try again later.</p>
+      </div>
+
+      <div class="empty-state" x-show="!loadError && photos.length === 0">
+        <h2>No photos yet</h2>
+        <p>Check back soon for new work.</p>
+      </div>
+
+      <div class="empty-state" x-show="!loadError && photos.length > 0 && filteredPhotos.length === 0" style="padding:32px 20px">
+        <p>No photos in this category.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Lightbox -->
+  <div class="lightbox-overlay" x-show="lightboxOpen" x-cloak @click.self="closeLightbox()">
+    <div class="lightbox-content" x-show="currentPhoto">
+      <button class="lightbox-close" @click="closeLightbox()">&times;</button>
+      <button class="lightbox-nav lightbox-prev" @click="prevPhoto()">&lsaquo;</button>
+      <img :src="currentPhoto?.image" :alt="currentPhoto?.title" />
+      <button class="lightbox-nav lightbox-next" @click="nextPhoto()">&rsaquo;</button>
+      <div class="lightbox-info">
+        <h3 x-text="currentPhoto?.title || ''"></h3>
+        <p x-text="currentPhoto?.description || ''"></p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function galleryPage() {
+      return {
+        photos: [],
+        categories: ['All'],
+        loadError: false,
+        filter: 'All',
+        lightboxOpen: false,
+        currentIndex: 0,
+
+        get filteredPhotos() {
+          if (this.filter === 'All') return this.photos;
+          return this.photos.filter(function(p) { return p.category === this.filter; }.bind(this));
+        },
+
+        get currentPhoto() {
+          return this.filteredPhotos[this.currentIndex];
+        },
+
+        async init() {
+          try {
+            var res = await fetch('/api/gallery');
+            var gallery = await res.json();
+            this.photos = (gallery.photos || []).sort(function(a, b) { return (a.order || 0) - (b.order || 0); });
+            var catSet = {};
+            this.photos.forEach(function(p) { if (p.category) catSet[p.category] = true; });
+            this.categories = ['All'].concat(Object.keys(catSet));
+          } catch (e) {
+            console.error('Failed to load gallery:', e);
+            this.loadError = true;
+          }
+        },
+
+        openLightbox(photo) {
+          var idx = this.filteredPhotos.indexOf(photo);
+          if (idx === -1) idx = 0;
+          this.currentIndex = idx;
+          this.lightboxOpen = true;
+          document.body.style.overflow = 'hidden';
+        },
+
+        closeLightbox() {
+          this.lightboxOpen = false;
+          document.body.style.overflow = '';
+        },
+
+        nextPhoto() {
+          var len = this.filteredPhotos.length;
+          if (len === 0) return;
+          this.currentIndex = (this.currentIndex + 1) % len;
+        },
+
+        prevPhoto() {
+          var len = this.filteredPhotos.length;
+          if (len === 0) return;
+          this.currentIndex = (this.currentIndex - 1 + len) % len;
+        },
+
+        handleKeydown(e) {
+          if (!this.lightboxOpen) return;
+          if (e.key === 'Escape') this.closeLightbox();
+          else if (e.key === 'ArrowRight') this.nextPhoto();
+          else if (e.key === 'ArrowLeft') this.prevPhoto();
+        }
+      };
+    }
+  </script>
+</body>
+</html>

@@ -46,18 +46,22 @@
       <h2 class="section-title">Gallery</h2>
       <p class="section-subtitle">A selection of my favorite work</p>
 
-      <div class="filters" x-show="photos.length > 0">
-        <template x-for="cat in categories" :key="cat">
+      <div class="filters filters-scroll" x-show="featuredPhotos.length > 0">
+        <template x-for="cat in featuredCategories" :key="cat">
           <button class="filter-btn" :class="{ active: filter === cat }" x-text="cat" @click="filter = cat; currentIndex = 0"></button>
         </template>
       </div>
 
-      <div class="photo-grid" x-show="photos.length > 0 && filteredPhotos.length > 0">
-        <template x-for="(photo, index) in filteredPhotos" :key="photo.id || index">
+      <div class="photo-grid" x-show="featuredPhotos.length > 0 && featuredFiltered.length > 0">
+        <template x-for="(photo, index) in featuredFiltered" :key="photo.id || index">
           <div class="photo-card" @click="openLightbox(photo)">
             <img :src="photo.image" :alt="photo.title" loading="lazy" />
           </div>
         </template>
+      </div>
+
+      <div x-show="!loadError && photos.length > 0" style="text-align:center;margin-top:32px">
+        <a href="gallery.html" class="btn btn-outline" style="color:white;border-color:rgba(255,255,255,0.5)">View Full Gallery &rarr;</a>
       </div>
 
       <div class="empty-state" x-show="loadError">
@@ -70,7 +74,7 @@
         <p>Visit the <a href="manage/">admin panel</a> to add your first photo.</p>
       </div>
 
-      <div class="empty-state" x-show="!loadError && photos.length > 0 && filteredPhotos.length === 0" style="padding: 32px 20px">
+      <div class="empty-state" x-show="!loadError && photos.length > 0 && featuredFiltered.length === 0" style="padding: 32px 20px">
         <p>No photos in this category.</p>
       </div>
     </div>
@@ -208,13 +212,29 @@
         scrolled: false,
         observer: null,
 
+        get featuredPhotos() {
+          var f = this.photos.filter(function(p) { return p.featured; });
+          return f.length > 0 ? f : this.photos.slice(0, 6);
+        },
+
         get filteredPhotos() {
           if (this.filter === 'All') return this.photos;
           return this.photos.filter(function(p) { return p.category === this.filter; }.bind(this));
         },
 
+        get featuredCategories() {
+          var cats = {}, arr = this.featuredPhotos;
+          arr.forEach(function(p) { if (p.category) cats[p.category] = true; });
+          return ['All'].concat(Object.keys(cats));
+        },
+
+        get featuredFiltered() {
+          if (this.filter === 'All') return this.featuredPhotos;
+          return this.featuredPhotos.filter(function(p) { return p.category === this.filter; }.bind(this));
+        },
+
         get currentPhoto() {
-          return this.filteredPhotos[this.currentIndex];
+          return this.featuredFiltered[this.currentIndex];
         },
 
         async init() {
@@ -267,7 +287,7 @@
         },
 
         openLightbox(photo) {
-          var idx = this.filteredPhotos.indexOf(photo);
+          var idx = this.featuredFiltered.indexOf(photo);
           if (idx === -1) idx = 0;
           this.currentIndex = idx;
           this.lightboxOpen = true;
@@ -280,13 +300,13 @@
         },
 
         nextPhoto() {
-          var len = this.filteredPhotos.length;
+          var len = this.featuredFiltered.length;
           if (len === 0) return;
           this.currentIndex = (this.currentIndex + 1) % len;
         },
 
         prevPhoto() {
-          var len = this.filteredPhotos.length;
+          var len = this.featuredFiltered.length;
           if (len === 0) return;
           this.currentIndex = (this.currentIndex - 1 + len) % len;
         },

@@ -1,7 +1,6 @@
 var photos = [];
 var fileSha = null;
 var pendingImage = null;
-var dirty = false;
 
 const MAX_TITLE_LEN = 100;
 const MAX_CATEGORY_LEN = 50;
@@ -75,11 +74,9 @@ async function loadGallery() {
     photos = data.photos || [];
     document.getElementById('status-text').textContent = 'Connected';
     showStatus('', '');
-    document.getElementById('toolbar').style.display = 'flex';
     renderPhotos();
   } catch (err) {
     document.getElementById('status-text').textContent = 'Error';
-    document.getElementById('toolbar').style.display = 'none';
     document.getElementById('error-container').style.display = 'block';
     document.getElementById('photo-grid').innerHTML = '';
     document.getElementById('loading-state').style.display = 'none';
@@ -133,20 +130,6 @@ function renderPhotos() {
 
 var dragSrcIndex = null;
 
-function setDirty(val) {
-  dirty = val;
-  var btn = document.getElementById('save-btn');
-  if (dirty) {
-    btn.textContent = 'Save Changes \u2605';
-    btn.style.outline = '2px solid #e67e22';
-    btn.style.outlineOffset = '2px';
-  } else {
-    btn.textContent = 'Save Changes';
-    btn.style.outline = 'none';
-    btn.style.outlineOffset = '0';
-  }
-}
-
 function handleDragStart(e) {
   dragSrcIndex = parseInt(this.dataset.index);
   this.classList.add('dragging');
@@ -177,7 +160,7 @@ function handleDrop(e) {
     photos.splice(targetIndex, 0, moved);
     photos.forEach(function(p, i) { p.order = i + 1; });
     renderPhotos();
-    setDirty(true);
+    autoSave();
   }
   dragSrcIndex = null;
 }
@@ -196,8 +179,10 @@ function openAddModal() {
   document.getElementById('photo-category').value = '';
   document.getElementById('photo-description').value = '';
   document.getElementById('preview-container').style.display = 'none';
+  document.getElementById('photo-featured').checked = false;
   document.getElementById('save-photo-btn').textContent = 'Add Photo';
   pendingImage = null;
+  document.getElementById('photo-featured').checked = !!photo.featured;
   document.getElementById('modal').style.display = 'flex';
   document.getElementById('photo-title').focus();
 }
@@ -235,7 +220,7 @@ function deletePhoto(index) {
   photos.splice(index, 1);
   photos.forEach(function(p, i) { p.order = i + 1; });
   renderPhotos();
-  setDirty(true);
+  autoSave();
 }
 
 async function savePhoto() {
@@ -283,9 +268,11 @@ async function savePhoto() {
 
   if (isEdit) {
     var idx = parseInt(editIndex);
+    var idx = parseInt(editIndex);
     photos[idx].title = title;
     photos[idx].category = category;
     photos[idx].description = description;
+    photos[idx].featured = document.getElementById('photo-featured').checked;
     if (imagePath) photos[idx].image = imagePath;
   } else {
     if (!imagePath) return alert('Please select an image.');
@@ -295,13 +282,14 @@ async function savePhoto() {
       image: imagePath,
       category: category,
       description: description,
+      featured: document.getElementById('photo-featured').checked,
       order: photos.length + 1
     });
   }
 
   renderPhotos();
   closeModal();
-  setDirty(true);
+  autoSave();
 }
 
 function removeImage() {
@@ -360,9 +348,7 @@ async function handleFile(file) {
   }
 }
 
-async function saveChanges() {
-  var btn = document.getElementById('save-btn');
-  btn.disabled = true;
+async function autoSave() {
   showStatus('Saving...', 'loading');
 
   try {
@@ -391,14 +377,11 @@ async function saveChanges() {
 
     var data = await res.json();
     fileSha = data.sha;
-    setDirty(false);
-    showStatus('Saved successfully!', 'success');
-    setTimeout(function() { showStatus('', ''); }, 3000);
+    showStatus('Saved', 'success');
+    setTimeout(function() { showStatus('', ''); }, 2000);
   } catch (err) {
     showStatus(sanitizeError(err), 'error');
   }
-
-  btn.disabled = false;
 }
 
 function fileToBase64(file) {
@@ -458,5 +441,5 @@ function escapeHtml(str) {
 }
 
 function adminLogout() {
-  window.location.href = 'https://log:out@' + window.location.host + '/';
+  window.location.href = '/manage/logout';
 }
