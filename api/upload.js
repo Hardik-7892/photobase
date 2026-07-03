@@ -1,6 +1,7 @@
 var { uploadFile } = require('../lib/github');
 var { validateFile } = require('../lib/validation');
-var { rateLimit } = require('../lib/rate-limit');
+var { rateLimit, getClientIp } = require('../lib/rate-limit');
+var auth = require('../lib/auth');
 
 module.exports = async function (req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -11,9 +12,16 @@ module.exports = async function (req, res) {
     return res.status(200).end();
   }
 
-  var ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown';
+  var ip = getClientIp(req);
   if (!rateLimit(ip)) {
     return res.status(429).json({ error: 'Too many requests. Please wait before trying again.' });
+  }
+
+  var cookie = req.headers.cookie || '';
+  var user = auth.isAuthenticatedFromCookie(cookie);
+
+  if (!user) {
+    return res.status(401).json({ error: 'Authentication required.' });
   }
 
   if (req.method !== 'POST') {
