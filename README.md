@@ -8,15 +8,31 @@ A full photographer portfolio website with an admin panel to manage photos from 
 
 ## Quick Start (1-Click Deploy)
 
+⭐ If you find this project useful, please consider starring it!
+
+### Step 1: Fork this repository (recommended)
+
+Forking lets you:
+
+- Keep your own copy of the project
+- Receive future updates more easily
+- Customize it without affecting the original
+
+### Step 2: Create a Vercel account
+
+If you don't already have one, create a Vercel account and connect it to your GitHub account.
+
+### Step 3: Deploy
+
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FHardik-7892%2Fshutterfolio&env=GITHUB_PAT,ADMIN_USERNAME,ADMIN_PASSWORD&project-name=shutterfolio&repository-name=shutterfolio)
 
 Click the button above to:
 
-1. **Fork** this repo to your GitHub account
-2. **Deploy** to Vercel (free)
+1. **Create your own copy** of this repo to your GitHub account
+2. **Deploy** it to Vercel (free)
 3. **Set** environment variables when prompted
 
-After deployment, your site is live at `https://shutterfolio.vercel.app` and the admin panel is at `https://shutterfolio.vercel.app/manage/`.
+After deployment, your application will be available at your own Vercel URL, for example: `https://shutterfolio.vercel.app` and the admin panel is at `https://shutterfolio.vercel.app/manage/`.
 
 ---
 
@@ -24,7 +40,7 @@ After deployment, your site is live at `https://shutterfolio.vercel.app` and the
 
 The token is stored securely in Vercel environment variables &mdash; it **never touches your browser**.
 
-**Option A: Fine-grained token (recommended)**
+### Option A: Fine-grained token (recommended)
 
 1. Go to **GitHub Settings > Developer settings > Personal access tokens > Fine-grained tokens**
 2. Click **Generate new token**
@@ -34,7 +50,7 @@ The token is stored securely in Vercel environment variables &mdash; it **never 
 
 > If you rename your repo later, update the token's repository access or use a classic token instead.
 
-**Option B: Classic token**
+### Option B: Classic token
 
 1. Go to **GitHub Settings > Developer settings > Personal access tokens > Tokens (classic)**
 2. Click **Generate new token (classic)**, check the **`repo`** scope
@@ -45,10 +61,11 @@ The token is stored securely in Vercel environment variables &mdash; it **never 
 When Vercel prompts you, set these:
 
 | Variable | Value |
-|---|---|
+| --- | --- |
 | `GITHUB_PAT` | your GitHub token from above |
 | `ADMIN_USERNAME` | username for the admin panel |
 | `ADMIN_PASSWORD` | password for the admin panel |
+| `SESSION_SECRET` | long random string (OPTIONAL, default is your password) |
 
 > **Repo info is auto-detected.** Vercel injects `VERCEL_GIT_REPO_OWNER`, `VERCEL_GIT_REPO_SLUG`, and `VERCEL_GIT_COMMIT_REF` automatically from your Git connection. You only need to set `GITHUB_PAT` and your admin credentials.
 
@@ -69,7 +86,7 @@ You can also change them later in **Vercel Dashboard &rarr; Project &rarr; Setti
 Edit **`settings.json`** to personalize your site:
 
 | Field | What it controls |
-|---|---|
+| --- | --- |
 | `site.title` | Browser tab title |
 | `photographer.name` | Displayed in hero, nav, and footer |
 | `photographer.tagline` | Subtitle under your name in the hero |
@@ -84,13 +101,14 @@ Edit **`settings.json`** to personalize your site:
 > **Sample images** are provided in `assets/images/samples/` and referenced in `settings.json`, `gallery.json`, and `index.html`. These are placeholders &mdash; replace them with your own photos.
 
 **To add your own images:**
+
 1. Place your image files directly in `assets/images/` (for example, `assets/images/hero.jpg`)
 2. Update the path in `settings.json`, `gallery.json`, or `index.html` to point to your file
 3. The admin panel will also upload new photos to `assets/images/` automatically
 
 ## File Structure
 
-```
+```bash
 shutterfolio/
 |-- index.html        Portfolio page (all sections, Alpine.js)
 |-- style.css         Global styles
