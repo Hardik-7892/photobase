@@ -596,7 +596,7 @@ function imageField(id, label, currentSrc, dataField) {
     '</div>' +
     '<input type="file" accept="image/*" style="display:none" id="' + id + '-file" onchange="handleSettingsImageUpload(event, \'' + id + '\')" />' +
     '<input type="hidden" id="' + id + '" data-field="' + (dataField || id) + '" value="' + escapeAttr(currentSrc) + '" />' +
-    (src ? '<div class="preview-sm"><img src="' + src + '" /></div>' : '') +
+    (src ? '<div class="preview-sm"><img src="' + escapeAttr(src) + '" /></div>' : '') +
   '</div>';
 }
 
@@ -668,9 +668,16 @@ async function handleSettingsImageUpload(event, id) {
 
   try {
     await validateFile(file);
-    var formData = new FormData();
-    formData.append('file', file);
-    var res = await fetch('/api/upload', { method: 'POST', body: formData });
+    var base64 = await fileToBase64(file);
+    var res = await fetch('/api/upload', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: file.name,
+        type: file.type,
+        content: base64
+      })
+    });
     if (!res.ok) {
       var err = await res.json().catch(function() { return {}; });
       throw new Error(err.error || 'Upload failed');
@@ -685,7 +692,7 @@ async function handleSettingsImageUpload(event, id) {
       var container = document.getElementById(id).closest('.settings-field');
       var p = document.createElement('div');
       p.className = 'preview-sm';
-      p.innerHTML = '<img src="' + absImageUrl(data.path) + '" />';
+      p.innerHTML = '<img src="' + escapeAttr(absImageUrl(data.path)) + '" />';
       container.appendChild(p);
     }
 
