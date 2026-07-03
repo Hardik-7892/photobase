@@ -32,7 +32,7 @@ export default async function middleware(request) {
             status: 302,
             headers: {
               'Location': '/manage/',
-              'Set-Cookie': 'photobase_session=' + session + '; Path=/manage; HttpOnly; SameSite=Lax; Max-Age=86400'
+              'Set-Cookie': 'shutterfolio_session=' + session + '; Path=/manage; HttpOnly; SameSite=Lax; Max-Age=86400'
             }
           });
         }
@@ -49,13 +49,13 @@ export default async function middleware(request) {
       status: 302,
       headers: {
         'Location': '/',
-        'Set-Cookie': 'photobase_session=; Path=/manage; Max-Age=0'
+        'Set-Cookie': 'shutterfolio_session=; Path=/manage; Max-Age=0'
       }
     });
   }
 
   var cookie = request.headers.get('cookie') || '';
-  var session = getCookieValue(cookie, 'photobase_session');
+  var session = getCookieValue(cookie, 'shutterfolio_session');
 
   if (session) {
     try {

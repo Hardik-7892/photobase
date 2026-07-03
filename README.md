@@ -1,4 +1,4 @@
-# Photobase
+# Shutterfolio
 
 A full photographer portfolio website with an admin panel to manage photos from any device.
 
@@ -8,7 +8,7 @@ A full photographer portfolio website with an admin panel to manage photos from 
 
 ## Quick Start (1-Click Deploy)
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FHardik-7892%2Fphotobase&env=GITHUB_PAT,ADMIN_USERNAME,ADMIN_PASSWORD&project-name=photobase&repository-name=photobase)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FHardik-7892%2Fshutterfolio&env=GITHUB_PAT,ADMIN_USERNAME,ADMIN_PASSWORD&project-name=shutterfolio&repository-name=shutterfolio)
 
 Click the button above to:
 
@@ -16,7 +16,7 @@ Click the button above to:
 2. **Deploy** to Vercel (free)
 3. **Set** environment variables when prompted
 
-After deployment, your site is live at `https://photobase-xxx.vercel.app` and the admin panel is at `https://photobase-xxx.vercel.app/manage/`.
+After deployment, your site is live at `https://shutterfolio.vercel.app` and the admin panel is at `https://shutterfolio.vercel.app/manage/`.
 
 ---
 
@@ -91,7 +91,7 @@ Edit **`settings.json`** to personalize your site:
 ## File Structure
 
 ```
-photobase/
+shutterfolio/
 |-- index.html        Portfolio page (all sections, Alpine.js)
 |-- style.css         Global styles
 |-- settings.json     Customizable portfolio content
